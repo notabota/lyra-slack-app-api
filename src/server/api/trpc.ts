@@ -26,10 +26,7 @@ import { type NextRequest, type NextResponse } from "next/server";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = async (opts: { 
-  req: NextRequest;
-  res: NextResponse;
-}) => {
+export const createTRPCContext = async (opts: { headers: Headers }) => {
   return {
     db,
     ...opts,

@@ -49,22 +49,22 @@ export default function Dashboard() {
   });
 
   const messageChartData = messageData?.data?.map((item) => ({
-    userId: item.userId,
-    userName: item.userName || `User ${item.userId}`,
-    count: item.count
-  })) || [];
+    userId: item?.userId,
+    userName: item?.userName || `User ${item?.userId}`,
+    count: item?.count
+  })) ?? [];
 
   const reactionChartData = reactionData?.data?.map((item) => ({
-    userId: item.userId,
-    userName: item.userName || `User ${item.userId}`,
-    count: item.count
-  })) || [];
+    userId: item?.userId,
+    userName: item?.userName || `User ${item?.userId}`,
+    count: item?.count
+  })) ?? [];
 
   const fileChartData = fileData?.data?.map((item) => ({
-    userId: item.userId,
-    userName: item.userName || `User ${item.userId}`,
-    count: item.count
-  })) || [];
+    userId: item?.userId,
+    userName: item?.userName || `User ${item?.userId}`,
+    count: item?.count
+  })) ?? [];
 
   useEffect(() => {
     console.log("Loading states changed:", {

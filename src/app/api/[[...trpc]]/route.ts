@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
 
 import { env } from "~/env";
 import { appRouter } from "~/server/api/root";
@@ -11,11 +11,12 @@ import { createOpenApiFetchHandler } from 'trpc-to-openapi';
  * handling a HTTP request (e.g. when you make requests from Client Components).
  */
 const createContext = async (req: NextRequest) => {
-  const res = NextResponse.next();
-  return createTRPCContext({ req, res });
+  return createTRPCContext({
+    headers: req.headers,
+  });
 };
 
-const handler = (req: NextRequest, res: NextResponse) =>
+const handler = (req: NextRequest) =>
   createOpenApiFetchHandler({
     endpoint: "/api",
     req,
@@ -24,7 +25,9 @@ const handler = (req: NextRequest, res: NextResponse) =>
     onError:
       env.NODE_ENV === "development"
         ? ({ path, error }) => {
-            console.error(`❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`);
+            console.error(
+              `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`
+            );
           }
         : undefined,
   });

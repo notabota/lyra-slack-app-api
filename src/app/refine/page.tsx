@@ -21,6 +21,6 @@ export default function App(): JSX.Element {
             )}>
                 <NavigateToResource resource="protected-products" />
             </ThemedLayoutV2>
-        </Authenticated>
+            </Authenticated>
     );
 }
