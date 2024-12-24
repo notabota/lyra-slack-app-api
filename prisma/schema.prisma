@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model file {
+  id                 Int      @id @default(autoincrement())
+  fileId             String
+  fileType           String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  name               String?
+  title              String?
+  pretty_type        String
+  mimetype           String
+  timestamp          Int
+  size               Int
+  mode               String
+  urlPrivate         String?
+  urlPrivateDownload String?
+  permalink          String
+  messageId          Int
+  userId             Int
+  message            message  @relation(fields: [messageId], references: [id])
+  user               user     @relation(fields: [userId], references: [id])
+}
+
+model message {
+  id          Int        @id @default(autoincrement())
+  type        String
+  timestamp   String     @unique
+  text        String?
+  channelType String
+  eventTs     String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  parentId    String?
+  threadTs    String?
+  userId      Int
+  channelId   Int
+  file        file[]
+  channel     channel    @relation(fields: [channelId], references: [id])
+  user        user       @relation(fields: [userId], references: [id])
+  reaction    reaction[]
+}
+
+model reaction {
+  id        Int      @id @default(autoincrement())
+  reaction  String
+  itemUser  String
+  eventTs   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt 
+  messageId Int
+  userId    Int
+  message   message  @relation(fields: [messageId], references: [id])
+  user      user     @relation(fields: [userId], references: [id])
+}
+
+model channel {
+  id            Int       @id @default(autoincrement())
+  channelId     String
+  name          String?
+  updated       Int?
+  creator       String?
+  lastRead      String?
+  isChannel     Boolean?
+  isGroup       Boolean?
+  isIm          Boolean?
+  isMpim        Boolean?
+  isPrivate     Boolean?
+  isArchived    Boolean?
+  isGeneral     Boolean?
+  isShared      Boolean?
+  isOrgShared   Boolean?
+  contextTeamId String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  message       message[]
+}
+
+model user {
+  id                     Int        @id @default(autoincrement())
+  userId                 String
+  name                   String?
+  realName               String?
+  displayName            String?
+  firstName              String?
+  lastName               String?
+  teamId                 String?
+  isAdmin                Boolean?
+  isOwner                Boolean?
+  isPrimaryOwner         Boolean?
+  isRestricted           Boolean?
+  isUltraRestricted      Boolean?
+  isBot                  Boolean?
+  isEmailConfirmed       Boolean?
+  whoCanShareContactCard String?
+  color                  String?
+  tz                     String?
+  phone                  String?
+  title                  String?
+  image                  String?
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  updated                Int?
+  file                   file[]
+  message                message[]
+  reaction               reaction[]
+}
