@@ -1,4 +1,5 @@
 import { AuthProvider } from "@refinedev/core";
+import { signIn, signOut, getSession } from "next-auth/react";
 
 export const authProvider: AuthProvider = {
   onError: async (error) => {
@@ -11,42 +12,35 @@ export const authProvider: AuthProvider = {
     return {};
   },
   getIdentity: async () => {
-    const token = localStorage.getItem("my_access_token");
-    const response = await fetch("https://api.fake-rest.refine.dev/auth/me", {
-      headers: {
-        Authorization: token ?? "",
-      },
-    });
-
-    if (response.status < 200 || response.status > 299) {
-      return null;
-    }
-
-    return response.json();
+    const session = await getSession();
+    if (!session?.user) return null;
+    
+    return {
+      id: 1,
+      name: session.user.name,
+      email: session.user.email,
+      avatar: session.user.image,
+    };
   },
   logout: async () => {
-    localStorage.removeItem("my_access_token");
+    await signOut({ redirect: false });
     return { success: true, redirectTo: "/refine/login" };
   },
-  login: async ({ email, password }) => {
-    const response = await fetch("https://api.fake-rest.refine.dev/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-      headers: { "Content-Type": "application/json" },
+  login: async () => {
+    const result = await signIn("slack", {
+      redirect: false,
+      callbackUrl: "/refine"
     });
 
-    const data = await response.json();
-
-    if (data.token) {
-      localStorage.setItem("my_access_token", data.token);
+    if (result?.ok) {
       return { success: true, redirectTo: "/refine" };
     }
 
     return { success: false };
   },
   check: async () => {
-    const token = localStorage.getItem("my_access_token");
-    return { authenticated: Boolean(token) };
+    const session = await getSession();
+    return { authenticated: !!session };
   },
   getPermissions: async () => null,
 };

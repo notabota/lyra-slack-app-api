@@ -12,6 +12,9 @@ export const env = createEnv({
       .enum(["development", "test", "production"])
       .default("development"),
     RAILWAY_TOKEN: z.string(),
+    SLACK_CLIENT_ID: z.string(),
+    SLACK_CLIENT_SECRET: z.string(),
+    NEXTAUTH_URL: z.string(),
   },
 
   /**
@@ -31,6 +34,9 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     RAILWAY_TOKEN: process.env.RAILWAY_TOKEN,
+    SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID,
+    SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET,
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
