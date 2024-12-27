@@ -1,128 +1,86 @@
 "use client";
 
-import { getDefaultFilter } from "@refinedev/core";
-import {
-  useTable,
-  getDefaultSortOrder,
-  FilterDropdown,
-  useSelect,
-  List,
-} from "@refinedev/antd";
+import { Card, Avatar, Typography, Row, Col } from "antd";
+import { List } from "@refinedev/antd";
+import { useCustom, useApiUrl } from "@refinedev/core";
 
-import { Table, Space, Input, Select, Spin } from "antd";
-import { BaseRecord } from "@refinedev/core";
+const { Title, Paragraph } = Typography;
 
-interface Interactivity extends BaseRecord {
+interface TriviaItem {
   userId: string;
-  userName: string;
+  userName?: string;
+  profileImage: string;
   messageCount: number;
-  reactionCount: number;
-  fileCount: number;
-  totalCount: number;
-  timespan: string;
 }
 
-export default function ListInteractivity() {
-  const { tableProps, filters, sorters } = useTable({
-    resource: "interactivity",
-    sorters: { initial: [{ field: "totalCount", order: "desc" }] },
-    syncWithLocation: true,
-    filters: {
-      initial: [{ field: "timespan", operator: "eq", value: "7d" }],
-    },
+export default function ListTrivia() {
+  const apiUrl = useApiUrl();
+  
+  const { data, isLoading } = useCustom({
+    url: `${apiUrl}/trivia`,
+    method: "get",
   });
 
-  const { selectProps: userSelectProps } = useSelect({
-    resource: "interactivity",
-    optionLabel: "userName",
-    optionValue: "userName",
-    defaultValue: getDefaultFilter("userName", filters),
-  });
+  if (isLoading) return <div>Loading...</div>;
 
   return (
-    <>
     <List>
-      <Table {...tableProps} rowKey="userId">
-        <Table.Column
-          dataIndex="userId"
-          title="User ID"
-        />
-        <Table.Column
-          dataIndex="userName"
-          title="User Name"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("userName", sorters)}
-          filterDropdown={(props) => (
-            <FilterDropdown {...props}>
-              <Select
-                style={{ width: "200px" }}
-                placeholder="Search user name"
-                {...userSelectProps}
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.label as string ?? '').toLowerCase().includes(input.toLowerCase())
-                }
+      <Row gutter={16} justify="center">
+        <Col span={12}>
+          <Card
+            key={`${data?.data.bro.userId}-1`}
+            style={{
+              width: 300,
+              margin: '20px auto',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+            }}
+          >
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <Avatar
+                size={100}
+                src={data?.data.bro.profileImage}
+                style={{ border: '4px solid #1890ff' }}
               />
-            </FilterDropdown>
-          )}
-          defaultFilteredValue={getDefaultFilter("userName", filters)}
-        />
-        <Table.Column
-          dataIndex="messageCount"
-          title="Messages"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("messageCount", sorters)}
-        />
-        <Table.Column
-          dataIndex="reactionCount"
-          title="Reactions"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("reactionCount", sorters)}
-        />
-        <Table.Column
-          dataIndex="fileCount"
-          title="Files"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("fileCount", sorters)}
-        />
-        <Table.Column
-          dataIndex="totalCount"
-          title="Total Activity"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("totalCount", sorters)}
-        />
-        <Table.Column
-          dataIndex="timespan"
-          title="Time Span"
-          render={(value) => {
-            const options: Record<string, string> = {
-              "1d": "Last 24 hours",
-              "7d": "Last 7 days",
-              "14d": "Last 14 days", 
-              "30d": "Last 30 days",
-              "all": "All time"
-            };
-            return options[value] || value;
-          }}
-          filterDropdown={(props) => (
-            <FilterDropdown {...props}>
-              <Select
-                style={{ width: "200px" }}
-                defaultValue="7d"
-                options={[
-                  { label: "Last 24 hours", value: "1d" },
-                  { label: "Last 7 days", value: "7d" },
-                  { label: "Last 14 days", value: "14d" },
-                  { label: "Last 30 days", value: "30d" },
-                  { label: "All time", value: "all" }
-                ]}
+            </div>
+            <Title level={3} style={{ textAlign: 'center', margin: '16px 0' }}>
+              {data?.data.bro.userName || `User ${data?.data.bro.userId}`}
+            </Title>
+            <Paragraph style={{ textAlign: 'center' }}>
+              Sent {data?.data.bro.messageCount} messages containing "bro" in the last 7 days
+            </Paragraph>
+            <Paragraph italic style={{ textAlign: 'center', color: '#666' }}>
+              "{data?.data.bro.randomLine}"
+            </Paragraph>
+          </Card>
+        </Col>
+        <Col span={12}>
+          <Card
+            key={`${data?.data.sorry.userId}-2`}
+            style={{
+              width: 300,
+              margin: '20px auto',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+            }}
+          >
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <Avatar
+                size={100}
+                src={data?.data.sorry.profileImage}
+                style={{ border: '4px solid #1890ff' }}
               />
-            </FilterDropdown>
-          )}
-          defaultFilteredValue={getDefaultFilter("timespan", filters)}
-        />
-      </Table>
+            </div>
+            <Title level={3} style={{ textAlign: 'center', margin: '16px 0' }}>
+              {data?.data.sorry.userName || `User ${data?.data.sorry.userId}`}
+            </Title>
+            <Paragraph style={{ textAlign: 'center' }}>
+              Sent {data?.data.sorry.messageCount} messages containing "sorry" in the last 7 days
+            </Paragraph>
+            <Paragraph italic style={{ textAlign: 'center', color: '#666' }}>
+              "{data?.data.sorry.randomLine}"
+            </Paragraph>
+          </Card>
+        </Col>
+      </Row>
     </List>
-    </>
   );
-};
+}

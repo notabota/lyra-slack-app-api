@@ -2,137 +2,140 @@ import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
+interface QueryResult {
+  userId: number;
+  text: string;
+  count: bigint;
+}
+
+interface RandomMessage {
+  text: string;
+}
+
 export const triviaRouter = createTRPCRouter({
   getList: publicProcedure
     .meta({ openapi: { method: 'GET', path: '/trivia' } })
-    .input(z.object({
-      _start: z.number().optional(),
-      _end: z.number().optional(),
-      _sort: z.string().optional(), 
-      _order: z.string().optional(),
-      timespan: z.enum(['1d', '7d', '14d', '30d', 'all']).optional(),
-      userName: z.string().optional()
-    }))
+    .input(z.void())
     .output(z.object({
-      data: z.array(z.object({
-        userId: z.number(),
-        userName: z.string().nullable(),
-        messageCount: z.number(),
-        reactionCount: z.number(),
-        fileCount: z.number(),
-        totalCount: z.number(),
-        timespan: z.enum(['1d', '7d', '14d', '30d', 'all'])
-      })),
-      total: z.number()
+      data: z.object({
+        bro: z.object({
+          userName: z.string(),
+          messageCount: z.number(),
+          profileImage: z.string().nullable(),
+          randomLine: z.string()
+        }),
+        sorry: z.object({
+          userName: z.string(),
+          messageCount: z.number(),
+          profileImage: z.string().nullable(),
+          randomLine: z.string()
+        })
+      }),
     }))
     .query(async ({ ctx, input }) => {
-      const skip = input._start;
-      const take = input._end ? input._end - (input._start ?? 0) : undefined;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(today.getDate() - 7);
+      
+      const broResults = await ctx.db.$queryRaw`
+        SELECT "userId", text, COUNT(*) as count
+        FROM "message"
+        WHERE text ~* '\\mbro\\M'
+        AND "createdAt" >= ${sevenDaysAgo}
+        AND "createdAt" <= ${today}
+        GROUP BY "userId", text
+        ORDER BY count DESC
+      ` as QueryResult[];
 
-      // Calculate date filter based on timespan
-      let dateFilter = {};
-      if (input.timespan && input.timespan !== 'all') {
-        const now = Math.floor(Date.now() / 1000);
-        const days = parseInt(input.timespan);
-        const secondsInDay = 86400;
-        const cutoffTime = (now - (days * secondsInDay)).toString();
-        dateFilter = {
-          createdAt: {
-            gte: new Date(parseInt(cutoffTime) * 1000).toISOString()
+      const sorryResults = await ctx.db.$queryRaw`
+        SELECT "userId", text, COUNT(*) as count
+        FROM "message"
+        WHERE text ~* '\\msorry\\M'
+        AND "createdAt" >= ${sevenDaysAgo}
+        AND "createdAt" <= ${today}
+        GROUP BY "userId", text
+        ORDER BY count DESC
+      ` as QueryResult[];
+
+      const randomBroMessage = await ctx.db.$queryRaw`
+        SELECT text 
+        FROM "message" 
+        WHERE text ~* '\\mbro\\M'
+        AND "createdAt" >= ${sevenDaysAgo}
+        AND "createdAt" <= ${today}
+        ORDER BY random()
+        LIMIT 1
+      ` as RandomMessage[];
+
+      const randomSorryMessage = await ctx.db.$queryRaw`
+        SELECT text
+        FROM "message"
+        WHERE text ~* '\\msorry\\M'
+        AND "createdAt" >= ${sevenDaysAgo}
+        AND "createdAt" <= ${today}
+        ORDER BY random()
+        LIMIT 1
+      ` as RandomMessage[];
+
+      console.log(broResults);
+      console.log(sorryResults);
+      
+      const topBro = broResults[0];
+      const topSorry = sorryResults[0];
+
+      console.log(topBro);
+      console.log(topSorry);
+
+      if (!topBro || !topSorry) {
+        throw new Error("No results found");
+      }
+
+      const broUser = await ctx.db.user.findFirst({
+        where: {
+          id: topBro.userId
+        },
+        select: {
+          firstName: true,
+          lastName: true,
+          image: true
+        }
+      });
+
+      const sorryUser = await ctx.db.user.findFirst({
+        where: {
+          id: topSorry.userId
+        },
+        select: {
+          firstName: true,
+          lastName: true,
+          image: true
+        }
+      });
+
+      const data = {
+        bro: {
+            userName: broUser?.firstName && broUser?.lastName 
+              ? `${broUser.firstName} ${broUser.lastName}`
+              : `User ${topBro.userId}`,
+            messageCount: broResults.length,
+            profileImage: broUser?.image ?? null,
+            randomLine: randomBroMessage[0]?.text ?? "No messages found"
+          },
+          sorry: {
+            userName: sorryUser?.firstName && sorryUser?.lastName
+              ? `${sorryUser.firstName} ${sorryUser.lastName}`
+              : `User ${topSorry.userId}`,
+            messageCount: sorryResults.length,
+            profileImage: sorryUser?.image ?? null,
+            randomLine: randomSorryMessage[0]?.text ?? "No messages found"
           }
         };
-      }
-
-      // Get message counts
-      const messageCounts = await ctx.db.message.groupBy({
-        by: ['userId'],
-        _count: {
-          userId: true
-        },
-        where: dateFilter
-      });
-
-      // Get reaction counts
-      const reactionCounts = await ctx.db.reaction.groupBy({
-        by: ['userId'],
-        _count: {
-          userId: true
-        },
-        where: dateFilter
-      });
-
-      // Get file counts
-      const fileCounts = await ctx.db.file.groupBy({
-        by: ['userId'],
-        _count: {
-          userId: true
-        },
-        where: dateFilter
-      });
-
-      // Combine all unique userIds
-      const userIds = [...new Set([
-        ...messageCounts.map(m => m.userId),
-        ...reactionCounts.map(r => r.userId),
-        ...fileCounts.map(f => f.userId)
-      ])];
-
-      // Get user details
-      const users = await ctx.db.user.findMany({
-        where: { id: { in: userIds } },
-        select: { id: true, firstName: true, lastName: true }
-      });
-
-      // Combine all counts
-      const combinedData = userIds.map(userId => {
-        const messageCount = messageCounts.find(m => m.userId === userId)?._count.userId ?? 0;
-        const reactionCount = reactionCounts.find(r => r.userId === userId)?._count.userId ?? 0;
-        const fileCount = fileCounts.find(f => f.userId === userId)?._count.userId ?? 0;
-        const totalCount = messageCount + reactionCount + fileCount;
-        const user = users.find(u => u.id === userId);
         
-        return {
-          userId,
-          userName: user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || null : null,
-          messageCount,
-          reactionCount,
-          fileCount,
-          totalCount,
-          timespan: input.timespan ?? "7d"
-        };
-      });
-
-      // Filter by userName if provided
-      let filteredData = combinedData;
-      if (input.userName) {
-        filteredData = combinedData.filter(item => 
-          item.userName?.toLowerCase().includes(input.userName!.toLowerCase())
-        );
-      }
-
-      // Sort the data if requested
-      if (input._sort && input._order) {
-        const sortField = input._sort;
-        const sortOrder = input._order.toLowerCase() as 'asc' | 'desc';
-        
-        filteredData.sort((a, b) => {
-          const aValue = a[sortField as keyof typeof a];
-          const bValue = b[sortField as keyof typeof b];
-          return sortOrder === 'asc' 
-            ? ((aValue ?? 0) < (bValue ?? 0) ? -1 : 1)
-            : ((aValue ?? 0) > (bValue ?? 0) ? -1 : 1);
-        });
-      } else {
-        // Default sort by totalCount desc
-        filteredData.sort((a, b) => b.totalCount - a.totalCount);
-      }
-
-      // Apply pagination
-      const paginatedData = filteredData.slice(skip ?? 0, input._end);
+      console.log(data);
 
       return {
-        data: paginatedData,
-        total: filteredData.length
+        data
       };
-    }),
+    })
 });
