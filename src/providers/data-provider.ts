@@ -1,14 +1,18 @@
 import type { DataProvider } from "@refinedev/core";
+import { getSession } from "next-auth/react";
 
 const API_URL = "/api";
 
 const fetcher = async (url: string, options?: RequestInit) => {
-  const token = localStorage.getItem("my_access_token");
+  // const session = await getSession();
+  // if (!session) {
+  //   throw new Error("Unauthorized - No valid session");
+  // }
   return fetch(url, {
     ...options,
     headers: {
       ...options?.headers,
-      Authorization: token ?? "",
+      Authorization: "Bearer",
     },
   });
 };
@@ -84,6 +88,21 @@ export const dataProvider: DataProvider = {
     const response = await fetcher(`${API_URL}/${resource}/${id}`, {
       method: "DELETE",
     });
+    if (response.status < 200 || response.status > 299) throw response;
+
+    const { data } = await response.json();
+    return { data };
+  },
+  custom: async ({ url, method, payload, headers }) => {
+    const response = await fetcher(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
+      body: payload ? JSON.stringify(payload) : undefined,
+    });
+
     if (response.status < 200 || response.status > 299) throw response;
 
     const { data } = await response.json();

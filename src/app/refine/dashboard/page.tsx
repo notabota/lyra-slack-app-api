@@ -5,6 +5,7 @@ import { Layout, Row, Col, Card, Spin } from "antd";
 import { MessagePieChart } from "~/components/ui/messages-count/pie";
 import { ReactionPieChart } from "~/components/ui/reactions-count/pie";
 import { FilePieChart } from "~/components/ui/files-count/pie";
+import { WeeklyCountBar } from "~/components/ui/weekly-count/bar";
 import {
   Select,
   SelectContent,
@@ -48,6 +49,14 @@ export default function Dashboard() {
     }
   });
 
+  const { data: weeklyData, isLoading: weeklyLoading } = useList({
+    resource: "weekly-count",
+    filters: [{ field: "timespan", operator: "eq", value: timespan }],
+    meta: {
+      select: ["week", "messageCount", "reactionCount", "fileCount"]
+    }
+  });
+
   const messageChartData = messageData?.data?.map((item) => ({
     userId: item?.userId,
     userName: item?.userName || `User ${item?.userId}`,
@@ -66,13 +75,21 @@ export default function Dashboard() {
     count: item?.count
   })) ?? [];
 
+  const weeklyChartData = weeklyData?.data?.map((item) => ({
+    week: item?.week,
+    messageCount: item?.messageCount,
+    reactionCount: item?.reactionCount,
+    fileCount: item?.fileCount
+  })) ?? [];
+
   useEffect(() => {
     console.log("Loading states changed:", {
       messageLoading,
       reactionLoading,
-      fileLoading
+      fileLoading,
+      weeklyLoading
     });
-  }, [messageLoading, reactionLoading, fileLoading]);
+  }, [messageLoading, reactionLoading, fileLoading, weeklyLoading]);
 
   return (
     <Layout>
@@ -116,6 +133,15 @@ export default function Dashboard() {
             <Spin spinning={fileLoading} tip="Loading chart...">
               <div className={fileLoading ? "h-[300px] flex items-center justify-center" : ""}>
                 {!fileLoading && <FilePieChart data={fileChartData} />}
+              </div>
+            </Spin>
+          </Card>
+        </Col>
+        <Col span={24}>
+          <Card title="Weekly Activity">
+            <Spin spinning={weeklyLoading} tip="Loading chart...">
+              <div className={weeklyLoading ? "h-[300px] flex items-center justify-center" : ""}>
+                {!weeklyLoading && <WeeklyCountBar weeklyChartData={weeklyChartData} />}
               </div>
             </Spin>
           </Card>
