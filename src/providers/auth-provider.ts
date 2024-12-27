@@ -26,8 +26,8 @@ export const authProvider: AuthProvider = {
     await signOut({ redirect: false });
     return { success: true, redirectTo: "/refine/login" };
   },
-  login: async (provider?: "slack" | "github") => {
-    const result = await signIn(provider || "slack", {
+  login: async ({ providerName }) => {
+    const result = await signIn(providerName, {
       redirect: false,
       callbackUrl: "/refine"
     });
