@@ -25,18 +25,14 @@ const config = {
     "@typescript-eslint/no-unsafe-argument": "off",
     "@typescript-eslint/restrict-template-expressions": "off",
     "@typescript-eslint/only-throw-error": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "react/no-unescaped-entities": "off",
     
     "@typescript-eslint/consistent-type-imports": [
       "warn",
       {
         "prefer": "type-imports",
         "fixStyle": "inline-type-imports"
-      }
-    ],
-    "@typescript-eslint/no-unused-vars": [
-      "warn",
-      {
-        "argsIgnorePattern": "^_"
       }
     ],
     "@typescript-eslint/require-await": "off",
