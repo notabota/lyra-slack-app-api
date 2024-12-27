@@ -1,41 +1,43 @@
 "use client";
 
-import { useMany, getDefaultFilter } from "@refinedev/core";
+import { getDefaultFilter } from "@refinedev/core";
 import {
   useTable,
-  EditButton,
-  ShowButton,
   getDefaultSortOrder,
   FilterDropdown,
   useSelect,
   List,
-  DateField,
 } from "@refinedev/antd";
 
 import { Table, Space, Input, Select, Spin } from "antd";
-import { ReactionPieChart } from "~/components/ui/reactions-count/pie";
 import { BaseRecord } from "@refinedev/core";
 
-interface ReactionCount extends BaseRecord {
+interface Interactivity extends BaseRecord {
   userId: string;
   userName: string;
-  count: number;
+  messageCount: number;
+  reactionCount: number;
+  fileCount: number;
+  totalCount: number;
   timespan: string;
 }
 
-export default function ListReactionsCount() {
+export default function ListInteractivity() {
   const { tableProps, filters, sorters } = useTable({
-    resource: "reactions-count",
-    sorters: { initial: [{ field: "count", order: "desc" }] },
+    resource: "interactivity",
+    sorters: { initial: [{ field: "totalCount", order: "desc" }] },
     syncWithLocation: true,
     filters: {
       initial: [{ field: "timespan", operator: "eq", value: "7d" }],
     },
   });
 
-  console.log("---------------- TABLE PROPS ----------------");
-  console.log(tableProps?.dataSource);
-  console.log("--------------------------------");
+  const { selectProps: userSelectProps } = useSelect({
+    resource: "interactivity",
+    optionLabel: "userName",
+    optionValue: "userName",
+    defaultValue: getDefaultFilter("userName", filters),
+  });
 
   return (
     <>
@@ -48,12 +50,46 @@ export default function ListReactionsCount() {
         <Table.Column
           dataIndex="userName"
           title="User Name"
+          sorter
+          defaultSortOrder={getDefaultSortOrder("userName", sorters)}
+          filterDropdown={(props) => (
+            <FilterDropdown {...props}>
+              <Select
+                style={{ width: "200px" }}
+                placeholder="Search user name"
+                {...userSelectProps}
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label as string ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+              />
+            </FilterDropdown>
+          )}
+          defaultFilteredValue={getDefaultFilter("userName", filters)}
         />
         <Table.Column
-          dataIndex="count"
-          title="Reaction Count"
+          dataIndex="messageCount"
+          title="Messages"
           sorter
-          defaultSortOrder={getDefaultSortOrder("count", sorters)}
+          defaultSortOrder={getDefaultSortOrder("messageCount", sorters)}
+        />
+        <Table.Column
+          dataIndex="reactionCount"
+          title="Reactions"
+          sorter
+          defaultSortOrder={getDefaultSortOrder("reactionCount", sorters)}
+        />
+        <Table.Column
+          dataIndex="fileCount"
+          title="Files"
+          sorter
+          defaultSortOrder={getDefaultSortOrder("fileCount", sorters)}
+        />
+        <Table.Column
+          dataIndex="totalCount"
+          title="Total Activity"
+          sorter
+          defaultSortOrder={getDefaultSortOrder("totalCount", sorters)}
         />
         <Table.Column
           dataIndex="timespan"
@@ -87,15 +123,6 @@ export default function ListReactionsCount() {
         />
       </Table>
     </List>
-    <Spin spinning={!!tableProps?.loading} tip="Loading chart...">
-      <ReactionPieChart 
-        data={tableProps?.dataSource?.map(item => ({
-          userId: String(item.userId),
-          userName: item.userName || 'Unknown',
-          count: item.count
-        }))} 
-      />
-    </Spin>
     </>
   );
 };

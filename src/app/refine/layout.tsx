@@ -18,7 +18,7 @@ export default function RefineLayout({ children }: { children: React.ReactNode }
           <Refine
             dataProvider={dataProvider}
             routerProvider={routerProvider}
-            authProvider={authProvider}
+            // authProvider={authProvider}
             notificationProvider={useNotificationProvider}
             resources={[
               // {
@@ -30,30 +30,25 @@ export default function RefineLayout({ children }: { children: React.ReactNode }
               //   meta: { label: "Products" },
               // },
               {
+                name: "trivia",
+                list: "/refine/trivia",
+                meta: { label: "Trivia" },
+              },
+              {
                 name: "dashboard",
                 list: "/refine/dashboard",
                 meta: { label: "Dashboard" },
+              },
+              {
+                name: "interactivity",
+                list: "/refine/interactivity",
+                meta: { label: "Interactivity" },
               },
               {
                 name: "messages",
                 list: "/refine/messages",
                 show: "/refine/messages/:id",
                 meta: { label: "Messages" },
-              },
-              {
-                name: "messages-count",
-                list: "/refine/messages-count",
-                meta: { label: "Messages Count" },
-              },
-              {
-                name: "reactions-count",
-                list: "/refine/reactions-count",
-                meta: { label: "Reactions Count" },
-              },
-              {
-                name: "files-count",
-                list: "/refine/files-count",
-                meta: { label: "Files Count" },
               },
             ]}
             options={{ syncWithLocation: true }}

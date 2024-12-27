@@ -19,7 +19,7 @@ export default function App(): JSX.Element {
             <ThemedLayoutV2 Title={(props) => (
                 <ThemedTitleV2 {...props} text="Lyratatouille" />
             )}>
-                <NavigateToResource resource="protected-products" />
+                <NavigateToResource resource="trivia" />
             </ThemedLayoutV2>
             </Authenticated>
     );

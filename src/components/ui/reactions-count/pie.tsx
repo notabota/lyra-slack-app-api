@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Label, Pie, PieChart } from "recharts"
+import { Label, Pie, PieChart, Legend } from "recharts"
 
 import {
   Card,
@@ -33,7 +33,7 @@ export function ReactionPieChart({ data = [] }: PieChartComponentProps) {
     const otherCount = otherUsers.reduce((sum, user) => sum + user.count, 0)
 
     const mappedData = topUsers.map((item, index) => ({
-      user: item.userName,
+      user: item.userName || "Unknown User",
       reactions: item.count,
       fill: `hsl(var(--chart-${index + 1}))`
     }))
@@ -79,7 +79,7 @@ export function ReactionPieChart({ data = [] }: PieChartComponentProps) {
       <CardContent className="flex-1 pb-0">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
+          className="mx-auto aspect-square"
         >
           <PieChart>
             <ChartTooltip
@@ -90,8 +90,11 @@ export function ReactionPieChart({ data = [] }: PieChartComponentProps) {
               data={chartData}
               dataKey="reactions"
               nameKey="user"
-              innerRadius={60}
+              innerRadius={80}
+              outerRadius={120}
               strokeWidth={5}
+              startAngle={90}
+              endAngle={450}
             >
               <Label
                 content={({ viewBox }) => {
@@ -123,17 +126,15 @@ export function ReactionPieChart({ data = [] }: PieChartComponentProps) {
                 }}
               />
             </Pie>
+            <Legend 
+              layout="horizontal"
+              align="center"
+              verticalAlign="bottom"
+              iconSize={8}
+            />
           </PieChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
-          Most active users by reaction count
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Showing distribution of reactions among top users
-        </div>
-      </CardFooter>
     </Card>
   )
 }
