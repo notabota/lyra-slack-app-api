@@ -15,10 +15,6 @@ export default function Login() {
           name: "slack",
           label: "with Slack",
         },
-        {
-          name: "github",
-          label: "with Github",
-        },
       ]}
     />
   );
