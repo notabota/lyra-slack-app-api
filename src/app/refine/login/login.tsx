@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function Login() {
   return (
-      <AuthPage
+    <AuthPage
       type="login"
       registerLink={false}
       forgotPasswordLink={false}
@@ -15,7 +15,11 @@ export default function Login() {
           name: "slack",
           label: "with Slack",
         },
+        {
+          name: "github",
+          label: "with Github",
+        },
       ]}
     />
   );
-};
+}
