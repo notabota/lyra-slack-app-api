@@ -54,6 +54,8 @@ export default function ListTrivia() {
               <a href={`https://lyra-technologies.slack.com/archives/${data?.data.bro.randomLineChannelId}/p${formatTimestamp(data?.data.bro.randomLineTimestamp)}`} target="_blank" rel="noopener noreferrer">
                 "{data?.data.bro.randomLine}"
               </a>
+              <br />
+              <small>in #{data?.data.bro.randomLineChannelName}</small>
             </Paragraph>
           </Card>
         </Col>
@@ -83,6 +85,8 @@ export default function ListTrivia() {
               <a href={`https://lyra-technologies.slack.com/archives/${data?.data.sorry.randomLineChannelId}/p${formatTimestamp(data?.data.sorry.randomLineTimestamp)}`} target="_blank" rel="noopener noreferrer">
                 "{data?.data.sorry.randomLine}"
               </a>
+              <br />
+              <small>in #{data?.data.sorry.randomLineChannelName}</small>
             </Paragraph>
           </Card>
         </Col>

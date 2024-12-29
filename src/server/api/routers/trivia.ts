@@ -12,6 +12,7 @@ interface RandomMessage {
   text: string;
   channelId: bigint;
   timestamp: string;
+  channelName: string;
 }
 
 export const triviaRouter = createTRPCRouter({
@@ -26,6 +27,7 @@ export const triviaRouter = createTRPCRouter({
           profileImage: z.string().nullable(),
           randomLine: z.string(),
           randomLineChannelId: z.string(),
+          randomLineChannelName: z.string(),
           randomLineTimestamp: z.string()
         }),
         sorry: z.object({
@@ -34,6 +36,7 @@ export const triviaRouter = createTRPCRouter({
           profileImage: z.string().nullable(),
           randomLine: z.string(),
           randomLineChannelId: z.string(),
+          randomLineChannelName: z.string(),
           randomLineTimestamp: z.string()
         })
       }),
@@ -45,22 +48,22 @@ export const triviaRouter = createTRPCRouter({
       sevenDaysAgo.setDate(today.getDate() - 7);
       
       const broResults = await ctx.db.$queryRaw`
-        SELECT "userId", text, COUNT(*) as count
+        SELECT "userId", COUNT(*) as count
         FROM "message"
         WHERE text ~* '\\mbro\\M'
         AND "createdAt" >= ${sevenDaysAgo}
         AND "createdAt" <= ${today}
-        GROUP BY "userId", text
+        GROUP BY "userId"
         ORDER BY count DESC
       ` as QueryResult[];
 
       const sorryResults = await ctx.db.$queryRaw`
-        SELECT "userId", text, COUNT(*) as count
+        SELECT "userId", COUNT(*) as count
         FROM "message"
         WHERE text ~* '\\msorry\\M'
         AND "createdAt" >= ${sevenDaysAgo}
         AND "createdAt" <= ${today}
-        GROUP BY "userId", text
+        GROUP BY "userId"
         ORDER BY count DESC
       ` as QueryResult[];
 
@@ -106,7 +109,7 @@ export const triviaRouter = createTRPCRouter({
       };
 
       const randomBroMessage = await ctx.db.$queryRaw`
-        SELECT m.text, c."channelId", m.timestamp
+        SELECT m.text, c."channelId", m.timestamp, c.name as "channelName"
         FROM "message" m
         JOIN "channel" c ON m."channelId" = c.id
         WHERE m.text ~* '\\mbro\\M'
@@ -118,7 +121,7 @@ export const triviaRouter = createTRPCRouter({
       ` as RandomMessage[];
 
       const randomSorryMessage = await ctx.db.$queryRaw`
-        SELECT m.text, c."channelId", m.timestamp
+        SELECT m.text, c."channelId", m.timestamp, c.name as "channelName"
         FROM "message" m
         JOIN "channel" c ON m."channelId" = c.id
         WHERE m.text ~* '\\msorry\\M'
@@ -160,6 +163,7 @@ export const triviaRouter = createTRPCRouter({
             profileImage: broUser?.image ?? null,
             randomLine: replaceUserTags(randomBroMessage[0]?.text ?? "No messages found"),
             randomLineChannelId: String(randomBroMessage[0]?.channelId ?? "0"),
+            randomLineChannelName: randomBroMessage[0]?.channelName ?? "unknown",
             randomLineTimestamp: randomBroMessage[0]?.timestamp ?? "0"
           },
           sorry: {
@@ -170,6 +174,7 @@ export const triviaRouter = createTRPCRouter({
             profileImage: sorryUser?.image ?? null,
             randomLine: replaceUserTags(randomSorryMessage[0]?.text ?? "No messages found"),
             randomLineChannelId: String(randomSorryMessage[0]?.channelId ?? "0"),
+            randomLineChannelName: randomSorryMessage[0]?.channelName ?? "unknown",
             randomLineTimestamp: randomSorryMessage[0]?.timestamp ?? "0"
           }
         };
