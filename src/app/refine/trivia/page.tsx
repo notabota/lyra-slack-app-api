@@ -23,6 +23,8 @@ export default function ListTrivia() {
 
   if (isLoading) return <div>Loading...</div>;
 
+  const formatTimestamp = (timestamp: string) => timestamp.replace('.', '');
+
   return (
     <List>
       <Row gutter={16} justify="center">
@@ -49,7 +51,9 @@ export default function ListTrivia() {
               Sent {data?.data.bro.messageCount} messages containing "bro" in the last 7 days
             </Paragraph>
             <Paragraph italic style={{ textAlign: 'center', color: '#666' }}>
-              "{data?.data.bro.randomLine}"
+              <a href={`https://lyra-technologies.slack.com/archives/${data?.data.bro.randomLineChannelId}/p${formatTimestamp(data?.data.bro.randomLineTimestamp)}`} target="_blank" rel="noopener noreferrer">
+                "{data?.data.bro.randomLine}"
+              </a>
             </Paragraph>
           </Card>
         </Col>
@@ -76,7 +80,9 @@ export default function ListTrivia() {
               Sent {data?.data.sorry.messageCount} messages containing "sorry" in the last 7 days
             </Paragraph>
             <Paragraph italic style={{ textAlign: 'center', color: '#666' }}>
-              "{data?.data.sorry.randomLine}"
+              <a href={`https://lyra-technologies.slack.com/archives/${data?.data.sorry.randomLineChannelId}/p${formatTimestamp(data?.data.sorry.randomLineTimestamp)}`} target="_blank" rel="noopener noreferrer">
+                "{data?.data.sorry.randomLine}"
+              </a>
             </Paragraph>
           </Card>
         </Col>

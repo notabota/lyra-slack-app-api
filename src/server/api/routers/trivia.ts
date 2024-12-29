@@ -10,6 +10,8 @@ interface QueryResult {
 
 interface RandomMessage {
   text: string;
+  channelId: bigint;
+  timestamp: string;
 }
 
 export const triviaRouter = createTRPCRouter({
@@ -22,13 +24,17 @@ export const triviaRouter = createTRPCRouter({
           userName: z.string(),
           messageCount: z.number(),
           profileImage: z.string().nullable(),
-          randomLine: z.string()
+          randomLine: z.string(),
+          randomLineChannelId: z.string(),
+          randomLineTimestamp: z.string()
         }),
         sorry: z.object({
           userName: z.string(),
           messageCount: z.number(),
           profileImage: z.string().nullable(),
-          randomLine: z.string()
+          randomLine: z.string(),
+          randomLineChannelId: z.string(),
+          randomLineTimestamp: z.string()
         })
       }),
     }))
@@ -58,26 +64,6 @@ export const triviaRouter = createTRPCRouter({
         ORDER BY count DESC
       ` as QueryResult[];
 
-      const randomBroMessage = await ctx.db.$queryRaw`
-        SELECT text 
-        FROM "message" 
-        WHERE text ~* '\\mbro\\M'
-        AND "createdAt" >= ${sevenDaysAgo}
-        AND "createdAt" <= ${today}
-        ORDER BY random()
-        LIMIT 1
-      ` as RandomMessage[];
-
-      const randomSorryMessage = await ctx.db.$queryRaw`
-        SELECT text
-        FROM "message"
-        WHERE text ~* '\\msorry\\M'
-        AND "createdAt" >= ${sevenDaysAgo}
-        AND "createdAt" <= ${today}
-        ORDER BY random()
-        LIMIT 1
-      ` as RandomMessage[];
-
       console.log(broResults);
       console.log(sorryResults);
       
@@ -90,6 +76,58 @@ export const triviaRouter = createTRPCRouter({
       if (!topBro || !topSorry) {
         throw new Error("No results found");
       }
+      // Get user names for tag replacement
+      const allUsers = await ctx.db.user.findMany({
+        select: {
+          id: true,
+          userId: true,
+          displayName: true,
+          realName: true
+        }
+      });
+
+      const userIdToName = new Map(
+        allUsers.map(user => [
+          String(user.userId),
+          user.displayName ?? user.realName ?? `User ${user.userId}`
+        ])
+      );
+
+      console.log(userIdToName);
+
+      const replaceUserTags = (text: string) => {
+        return text.replace(/<@([A-Z0-9]+)>/g, (match, userId) => {
+          console.log("--------------------------------");
+          console.log(match, userId);
+          console.log(userIdToName.get(userId));
+          console.log("--------------------------------");
+          return `@${userIdToName.get(userId) || match}`;
+        });
+      };
+
+      const randomBroMessage = await ctx.db.$queryRaw`
+        SELECT m.text, c."channelId", m.timestamp
+        FROM "message" m
+        JOIN "channel" c ON m."channelId" = c.id
+        WHERE m.text ~* '\\mbro\\M'
+        AND m."userId" = ${topBro.userId}
+        AND m."createdAt" >= ${sevenDaysAgo}
+        AND m."createdAt" <= ${today}
+        ORDER BY random()
+        LIMIT 1
+      ` as RandomMessage[];
+
+      const randomSorryMessage = await ctx.db.$queryRaw`
+        SELECT m.text, c."channelId", m.timestamp
+        FROM "message" m
+        JOIN "channel" c ON m."channelId" = c.id
+        WHERE m.text ~* '\\msorry\\M'
+        AND m."userId" = ${topSorry.userId}
+        AND m."createdAt" >= ${sevenDaysAgo}
+        AND m."createdAt" <= ${today}
+        ORDER BY random()
+        LIMIT 1
+      ` as RandomMessage[];
 
       const broUser = await ctx.db.user.findFirst({
         where: {
@@ -118,17 +156,21 @@ export const triviaRouter = createTRPCRouter({
             userName: broUser?.firstName && broUser?.lastName 
               ? `${broUser.firstName} ${broUser.lastName}`
               : `User ${topBro.userId}`,
-            messageCount: broResults.length,
+            messageCount: Number(topBro.count),
             profileImage: broUser?.image ?? null,
-            randomLine: randomBroMessage[0]?.text ?? "No messages found"
+            randomLine: replaceUserTags(randomBroMessage[0]?.text ?? "No messages found"),
+            randomLineChannelId: String(randomBroMessage[0]?.channelId ?? "0"),
+            randomLineTimestamp: randomBroMessage[0]?.timestamp ?? "0"
           },
           sorry: {
             userName: sorryUser?.firstName && sorryUser?.lastName
               ? `${sorryUser.firstName} ${sorryUser.lastName}`
               : `User ${topSorry.userId}`,
-            messageCount: sorryResults.length,
+            messageCount: Number(topSorry.count),
             profileImage: sorryUser?.image ?? null,
-            randomLine: randomSorryMessage[0]?.text ?? "No messages found"
+            randomLine: replaceUserTags(randomSorryMessage[0]?.text ?? "No messages found"),
+            randomLineChannelId: String(randomSorryMessage[0]?.channelId ?? "0"),
+            randomLineTimestamp: randomSorryMessage[0]?.timestamp ?? "0"
           }
         };
         

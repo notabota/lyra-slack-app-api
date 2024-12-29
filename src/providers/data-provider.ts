@@ -19,11 +19,17 @@ const fetcher = async (url: string, options?: RequestInit) => {
 
 export const dataProvider: DataProvider = {
   getList: async ({ resource, pagination, filters, sorters }) => {
+    
+    console.log("--------------- PAGINATION -----------------");
+    console.log(pagination);
+    console.log("--------------------------------");
+
     const params = new URLSearchParams();
 
-    if (pagination?.current && pagination?.pageSize) {
-      params.append("_start", String((pagination.current - 1) * pagination.pageSize));
-      params.append("_end", String(pagination.current * pagination.pageSize));
+    const current = pagination?.current ?? 1;
+    if (pagination?.pageSize) {
+      params.append("_start", String((current - 1) * pagination.pageSize));
+      params.append("_end", String(current * pagination.pageSize));
     }
 
     if (sorters?.length) {
@@ -39,11 +45,15 @@ export const dataProvider: DataProvider = {
       });
     }
 
+    console.log("--------------- PARAMS -----------------");
+    console.log(params.toString());
+    console.log("--------------------------------");
+
     const response = await fetcher(`${API_URL}/${resource}?${params.toString()}`);
     if (response.status < 200 || response.status > 299) throw response;
 
-    const { data, total } = await response.json();
-    return { data, total };
+    const { data, total, hasNextPage } = await response.json();
+    return { data, total, hasNextPage };
   },
   getMany: async ({ resource, ids }) => {
     const params = new URLSearchParams();

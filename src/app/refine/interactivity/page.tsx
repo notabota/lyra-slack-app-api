@@ -54,15 +54,16 @@ export default function ListInteractivity() {
   const [globalFilter, setGlobalFilter] = useState<string>();
   const [sorting, setSorting] = useState<MRT_SortingState>([]);
   const [timespan, setTimespan] = useState<"1d" | "7d" | "14d" | "30d" | "all">("7d");
-
-  useEffect(() => {
-    console.log('Column filters changed:', columnFilters);
-  }, [columnFilters]);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: fetchSize,
+  });
 
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteList<InteractivityData>({
     resource: "interactivity",
     pagination: {
-      pageSize: fetchSize,
+      pageSize: pagination.pageSize,
+      current: (pagination.pageIndex ?? 0) + 1,
     },
     filters: [
       ...(columnFilters.find(f => f.id === 'userName')?.value 
@@ -99,12 +100,19 @@ export default function ListInteractivity() {
     (containerRefElement?: HTMLDivElement | null) => {
       if (containerRefElement) {
         const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
+        console.log('----------------------------------------');
+        console.log('📜 Scroll metrics:', { scrollHeight, scrollTop, clientHeight });
+        console.log('📜 scrollHeight - scrollTop - clientHeight:', scrollHeight - scrollTop - clientHeight);
+        console.log('📜 isFetching:', isFetching);
+        console.log('📜 data.pages.length:', data?.pages.length);
+        console.log('📜 data.pages[data.pages.length - 1]?.hasNextPage:', data?.pages[data.pages.length - 1]?.hasNextPage);
+        console.log('----------------------------------------');
         if (
-          scrollHeight - scrollTop - clientHeight < 400 &&
+          scrollHeight - scrollTop - clientHeight < 200 &&
           !isFetching &&
           data?.pages[data.pages.length - 1]?.hasNextPage
         ) {
-          fetchNextPage();
+          void fetchNextPage();
         }
       }
     },
@@ -119,17 +127,16 @@ export default function ListInteractivity() {
     columns,
     data: flatData,
     enablePagination: false,
-    enableRowNumbers: true,
     enableRowVirtualization: true,
     manualFiltering: true,
     manualSorting: true,
+    manualPagination: true,
     enableFacetedValues: true,
     initialState: { showColumnFilters: true },
     muiTableContainerProps: {
       ref: tableContainerRef,
       sx: { maxHeight: '600px' },
-      onScroll: (event: React.UIEvent<HTMLDivElement>) =>
-        fetchMoreOnBottomReached(event.target as HTMLDivElement),
+      onScroll: (event) => fetchMoreOnBottomReached(event.target as HTMLDivElement),
     },
     muiToolbarAlertBannerProps: isError
       ? {
@@ -140,6 +147,7 @@ export default function ListInteractivity() {
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     renderTopToolbarCustomActions: () => (
       <FormControl sx={{ minWidth: 120, mr: 2 }}>
         <InputLabel>Time Period</InputLabel>
@@ -169,7 +177,10 @@ export default function ListInteractivity() {
       showAlertBanner: isError,
       showProgressBars: isFetching,
       sorting,
+      pagination,
     },
+    rowCount: totalRows,
+    pageCount: Math.ceil(totalRows / fetchSize),
     muiTablePaperProps: {
       sx: {
         fontFamily: antdFont

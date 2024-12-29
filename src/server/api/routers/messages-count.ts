@@ -92,7 +92,7 @@ export const messageCountRouter = createTRPCRouter({
 
       // Transform the data into the expected format
       const data = messageCounts.map(count => ({
-        userId: count.userId,
+        userId: Number(count.userId),
         userName: users.find(u => u.id === count.userId)
           ? `${users.find(u => u.id === count.userId)?.firstName ?? ''} ${users.find(u => u.id === count.userId)?.lastName ?? ''}`.trim() || null
           : null,

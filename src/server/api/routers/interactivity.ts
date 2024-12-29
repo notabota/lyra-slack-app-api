@@ -23,7 +23,8 @@ export const interactivityRouter = createTRPCRouter({
         totalCount: z.number(),
         timespan: z.enum(['1d', '7d', '14d', '30d', 'all'])
       })),
-      total: z.number()
+      total: z.number(),
+      hasNextPage: z.boolean()
     }))
     .query(async ({ ctx, input }) => {
       const skip = input._start;
@@ -80,7 +81,7 @@ export const interactivityRouter = createTRPCRouter({
       // Get user details
       const users = await ctx.db.user.findMany({
         where: { id: { in: userIds } },
-        select: { id: true, firstName: true, lastName: true }
+        select: { id: true, displayName: true, realName: true }
       });
 
       // Combine all counts
@@ -92,8 +93,8 @@ export const interactivityRouter = createTRPCRouter({
         const user = users.find(u => u.id === userId);
         
         return {
-          userId,
-          userName: user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || null : null,
+          userId: Number(userId),
+          userName: user?.displayName || user?.realName || null,
           messageCount,
           reactionCount,
           fileCount,
@@ -132,7 +133,8 @@ export const interactivityRouter = createTRPCRouter({
 
       return {
         data: paginatedData,
-        total: filteredData.length
+        total: filteredData.length,
+        hasNextPage: (skip ?? 0) + (take ?? 0) < filteredData.length
       };
     }),
 });

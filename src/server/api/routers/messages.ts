@@ -26,7 +26,8 @@ export const messageRouter = createTRPCRouter({
         parentId: z.string().nullable(),
         threadTs: z.string().nullable()
       })),
-      total: z.number()
+      total: z.number(),
+      hasNextPage: z.boolean()
     }))
     .query(async ({ ctx, input }) => {
       const skip = input._start;
@@ -54,13 +55,15 @@ export const messageRouter = createTRPCRouter({
         ctx.db.message.count({ where })
       ]);
 
-      console.log("---------------- MESSAGES ----------------");
-      console.log(messages);
-      console.log("--------------------------------");
-
       return {
-        data: messages,
-        total
+        data: messages.map(msg => ({
+          ...msg,
+          id: Number(msg.id),
+          userId: Number(msg.userId),
+          channelId: Number(msg.channelId)
+        })),
+        total,
+        hasNextPage: (skip ?? 0) + (take ?? 0) < total
       };
     }),
 
@@ -91,7 +94,12 @@ export const messageRouter = createTRPCRouter({
       });
 
       return {
-        data: message,
+        data: {
+          ...message,
+          id: Number(message.id),
+          userId: Number(message.userId),
+          channelId: Number(message.channelId)
+        },
         total: 1
       };
     }),
@@ -133,7 +141,12 @@ export const messageRouter = createTRPCRouter({
       });
 
       return {
-        data: message,
+        data: {
+          ...message,
+          id: Number(message.id),
+          userId: Number(message.userId),
+          channelId: Number(message.channelId)
+        },
         total: 1
       };
     }),
@@ -177,7 +190,12 @@ export const messageRouter = createTRPCRouter({
       });
 
       return {
-        data: message,
+        data: {
+          ...message,
+          id: Number(message.id),
+          userId: Number(message.userId),
+          channelId: Number(message.channelId)
+        },
         total: 1
       };
     }),
@@ -199,7 +217,7 @@ export const messageRouter = createTRPCRouter({
 
       return {
         data: {
-          id: message.id
+          id: Number(message.id)
         }
       };
     })
