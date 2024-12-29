@@ -1,128 +1,181 @@
 "use client";
 
-import { getDefaultFilter } from "@refinedev/core";
-import {
-  useTable,
-  getDefaultSortOrder,
-  FilterDropdown,
-  useSelect,
-  List,
-} from "@refinedev/antd";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_ColumnFiltersState, type MRT_SortingState } from 'material-react-table';
+import { Typography, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { useInfiniteList } from "@refinedev/core";
 
-import { Table, Space, Input, Select, Spin } from "antd";
-import { BaseRecord } from "@refinedev/core";
+const antdFont = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"';
 
-interface Interactivity extends BaseRecord {
-  userId: string;
-  userName: string;
+type InteractivityData = {
+  userId: number;
+  userName: string | null;
   messageCount: number;
   reactionCount: number;
   fileCount: number;
   totalCount: number;
-  timespan: string;
-}
+  timespan: "1d" | "7d" | "14d" | "30d" | "all";
+};
+
+const columns: MRT_ColumnDef<InteractivityData>[] = [
+  {
+    accessorKey: 'userName',
+    header: 'User Name',
+    filterVariant: 'autocomplete',
+  },
+  {
+    accessorKey: 'messageCount',
+    header: 'Messages',
+    enableColumnFilter: false,
+  },
+  {
+    accessorKey: 'reactionCount', 
+    header: 'Reactions',
+    enableColumnFilter: false,
+  },
+  {
+    accessorKey: 'fileCount',
+    header: 'Files',
+    enableColumnFilter: false,
+  },
+  {
+    accessorKey: 'totalCount',
+    header: 'Total Activity',
+    enableColumnFilter: false,
+  }
+];
+
+const fetchSize = 50;
 
 export default function ListInteractivity() {
-  const { tableProps, filters, sorters } = useTable({
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  
+  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState<string>();
+  const [sorting, setSorting] = useState<MRT_SortingState>([]);
+  const [timespan, setTimespan] = useState<"1d" | "7d" | "14d" | "30d" | "all">("7d");
+
+  useEffect(() => {
+    console.log('Column filters changed:', columnFilters);
+  }, [columnFilters]);
+
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteList<InteractivityData>({
     resource: "interactivity",
-    sorters: { initial: [{ field: "totalCount", order: "desc" }] },
-    syncWithLocation: true,
-    filters: {
-      initial: [{ field: "timespan", operator: "eq", value: "7d" }],
+    pagination: {
+      pageSize: fetchSize,
     },
+    filters: [
+      ...(columnFilters.find(f => f.id === 'userName')?.value 
+        ? [{
+            field: "userName",
+            operator: "eq" as const,
+            value: columnFilters.find(f => f.id === 'userName')?.value
+          }]
+        : []),
+      {
+        field: "timespan",
+        operator: "eq" as const,
+        value: timespan
+      }
+    ],
+    sorters: sorting.map(sort => ({
+      field: sort.id,
+      order: sort.desc ? "desc" : "asc"
+    })),
+    meta: {
+      timespan
+    }
   });
 
-  const { selectProps: userSelectProps } = useSelect({
-    resource: "interactivity",
-    optionLabel: "userName",
-    optionValue: "userName",
-    defaultValue: getDefaultFilter("userName", filters),
-  });
-
-  return (
-    <>
-    <List>
-      <Table {...tableProps} rowKey="userId">
-        <Table.Column
-          dataIndex="userId"
-          title="User ID"
-        />
-        <Table.Column
-          dataIndex="userName"
-          title="User Name"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("userName", sorters)}
-          filterDropdown={(props) => (
-            <FilterDropdown {...props}>
-              <Select
-                style={{ width: "200px" }}
-                placeholder="Search user name"
-                {...userSelectProps}
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.label as string ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-              />
-            </FilterDropdown>
-          )}
-          defaultFilteredValue={getDefaultFilter("userName", filters)}
-        />
-        <Table.Column
-          dataIndex="messageCount"
-          title="Messages"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("messageCount", sorters)}
-        />
-        <Table.Column
-          dataIndex="reactionCount"
-          title="Reactions"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("reactionCount", sorters)}
-        />
-        <Table.Column
-          dataIndex="fileCount"
-          title="Files"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("fileCount", sorters)}
-        />
-        <Table.Column
-          dataIndex="totalCount"
-          title="Total Activity"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("totalCount", sorters)}
-        />
-        <Table.Column
-          dataIndex="timespan"
-          title="Time Span"
-          render={(value) => {
-            const options: Record<string, string> = {
-              "1d": "Last 24 hours",
-              "7d": "Last 7 days",
-              "14d": "Last 14 days", 
-              "30d": "Last 30 days",
-              "all": "All time"
-            };
-            return options[value] || value;
-          }}
-          filterDropdown={(props) => (
-            <FilterDropdown {...props}>
-              <Select
-                style={{ width: "200px" }}
-                defaultValue="7d"
-                options={[
-                  { label: "Last 24 hours", value: "1d" },
-                  { label: "Last 7 days", value: "7d" },
-                  { label: "Last 14 days", value: "14d" },
-                  { label: "Last 30 days", value: "30d" },
-                  { label: "All time", value: "all" }
-                ]}
-              />
-            </FilterDropdown>
-          )}
-          defaultFilteredValue={getDefaultFilter("timespan", filters)}
-        />
-      </Table>
-    </List>
-    </>
+  const flatData = useMemo(
+    () => (data?.pages.flatMap((page) => page.data) ?? []) as InteractivityData[],
+    [data]
   );
-};
+
+  const totalFetched = flatData.length;
+  const totalRows = data?.pages[0]?.total ?? 0;
+
+  const fetchMoreOnBottomReached = useCallback(
+    (containerRefElement?: HTMLDivElement | null) => {
+      if (containerRefElement) {
+        const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
+        if (
+          scrollHeight - scrollTop - clientHeight < 400 &&
+          !isFetching &&
+          data?.pages[data.pages.length - 1]?.hasNextPage
+        ) {
+          fetchNextPage();
+        }
+      }
+    },
+    [fetchNextPage, isFetching, data?.pages]
+  );
+
+  useEffect(() => {
+    fetchMoreOnBottomReached(tableContainerRef.current);
+  }, [fetchMoreOnBottomReached]);
+
+  const table = useMaterialReactTable({
+    columns,
+    data: flatData,
+    enablePagination: false,
+    enableRowNumbers: true,
+    enableRowVirtualization: true,
+    manualFiltering: true,
+    manualSorting: true,
+    enableFacetedValues: true,
+    initialState: { showColumnFilters: true },
+    muiTableContainerProps: {
+      ref: tableContainerRef,
+      sx: { maxHeight: '600px' },
+      onScroll: (event: React.UIEvent<HTMLDivElement>) =>
+        fetchMoreOnBottomReached(event.target as HTMLDivElement),
+    },
+    muiToolbarAlertBannerProps: isError
+      ? {
+          color: 'error',
+          children: 'Error loading data',
+        }
+      : undefined,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    onSortingChange: setSorting,
+    renderTopToolbarCustomActions: () => (
+      <FormControl sx={{ minWidth: 120, mr: 2 }}>
+        <InputLabel>Time Period</InputLabel>
+        <Select
+          value={timespan}
+          label="Time Period"
+          onChange={(e) => setTimespan(e.target.value as typeof timespan)}
+          sx={{ fontFamily: antdFont }}
+        >
+          <MenuItem value="1d" sx={{ fontFamily: antdFont }}>Last 24 Hours</MenuItem>
+          <MenuItem value="7d" sx={{ fontFamily: antdFont }}>Last 7 Days</MenuItem>
+          <MenuItem value="14d" sx={{ fontFamily: antdFont }}>Last 14 Days</MenuItem>
+          <MenuItem value="30d" sx={{ fontFamily: antdFont }}>Last 30 Days</MenuItem>
+          <MenuItem value="all" sx={{ fontFamily: antdFont }}>All Time</MenuItem>
+        </Select>
+      </FormControl>
+    ),
+    renderBottomToolbarCustomActions: () => (
+      <Typography sx={{ fontFamily: antdFont }}>
+        Fetched {totalFetched} of {totalRows} rows
+      </Typography>
+    ),
+    state: {
+      columnFilters,
+      globalFilter,
+      isLoading,
+      showAlertBanner: isError,
+      showProgressBars: isFetching,
+      sorting,
+    },
+    muiTablePaperProps: {
+      sx: {
+        fontFamily: antdFont
+      }
+    }
+  });
+
+  return <MaterialReactTable table={table} />;
+}

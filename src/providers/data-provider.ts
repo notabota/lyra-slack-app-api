@@ -4,10 +4,10 @@ import { getSession } from "next-auth/react";
 const API_URL = "/api";
 
 const fetcher = async (url: string, options?: RequestInit) => {
-  const session = await getSession();
-  if (!session) {
-    throw new Error("Unauthorized - No valid session");
-  }
+  // const session = await getSession();
+  // if (!session) {
+  //   throw new Error("Unauthorized - No valid session");
+  // }
   return fetch(url, {
     ...options,
     headers: {

@@ -8,7 +8,7 @@ datasource db {
 }
 
 model file {
-  id                 Int      @id @default(autoincrement())
+  id                 BigInt   @id @default(autoincrement())
   fileId             String
   fileType           String
   createdAt          DateTime @default(now())
@@ -17,20 +17,20 @@ model file {
   title              String?
   pretty_type        String
   mimetype           String
-  timestamp          Int
-  size               Int
+  timestamp          BigInt
+  size               BigInt
   mode               String
   urlPrivate         String?
   urlPrivateDownload String?
   permalink          String
-  messageId          Int
-  userId             Int
+  messageId          BigInt
+  userId             BigInt
   message            message  @relation(fields: [messageId], references: [id])
   user               user     @relation(fields: [userId], references: [id])
 }
 
 model message {
-  id          Int        @id @default(autoincrement())
+  id          BigInt     @id @default(autoincrement())
   type        String
   timestamp   String     @unique
   text        String?
@@ -40,8 +40,8 @@ model message {
   updatedAt   DateTime   @updatedAt
   parentId    String?
   threadTs    String?
-  userId      Int
-  channelId   Int
+  userId      BigInt
+  channelId   BigInt
   file        file[]
   channel     channel    @relation(fields: [channelId], references: [id])
   user        user       @relation(fields: [userId], references: [id])
@@ -49,23 +49,23 @@ model message {
 }
 
 model reaction {
-  id        Int      @id @default(autoincrement())
+  id        BigInt   @id @default(autoincrement())
   reaction  String
   itemUser  String
   eventTs   String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt 
-  messageId Int
-  userId    Int
+  updatedAt DateTime @updatedAt
+  messageId BigInt
+  userId    BigInt
   message   message  @relation(fields: [messageId], references: [id])
   user      user     @relation(fields: [userId], references: [id])
 }
 
 model channel {
-  id            Int       @id @default(autoincrement())
+  id            BigInt    @id @default(autoincrement())
   channelId     String
   name          String?
-  updated       Int?
+  updated       BigInt?
   creator       String?
   lastRead      String?
   isChannel     Boolean?
@@ -84,7 +84,7 @@ model channel {
 }
 
 model user {
-  id                     Int        @id @default(autoincrement())
+  id                     BigInt     @id @default(autoincrement())
   userId                 String
   name                   String?
   realName               String?
@@ -107,7 +107,7 @@ model user {
   image                  String?
   createdAt              DateTime   @default(now())
   updatedAt              DateTime   @updatedAt
-  updated                Int?
+  updated                BigInt?
   file                   file[]
   message                message[]
   reaction               reaction[]

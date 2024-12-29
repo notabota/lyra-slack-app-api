@@ -18,7 +18,7 @@ export default function RefineLayout({ children }: { children: React.ReactNode }
           <Refine
             dataProvider={dataProvider}
             routerProvider={routerProvider}
-            authProvider={authProvider}
+            // authProvider={authProvider}
             notificationProvider={useNotificationProvider}
             resources={[
               // {
