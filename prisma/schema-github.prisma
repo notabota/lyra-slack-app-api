@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/github-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_GITHUB")
+}
+
+model User {
+  id      String   @id @default(cuid())
+  GitHubUsername    String @unique
+  accessToken String?
+  refreshToken String?
+  repos   Repo[]
+}
+
+model Repo {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  url     String   @unique
+  user    User     @relation(fields: [userId], references: [id])
+  userId  String
+  commits Commit[]
+}
+
+model Commit {
+  id          Int      @id @default(autoincrement())
+  message     String
+  commitHash  String?
+  timestamp   DateTime?
+  repo        Repo     @relation(fields: [repoId], references: [id])
+  repoId      String
+  author      String?
+  committer   String?
+  numberOfLinesAdded Int?
+  numberOfLinesRemoved Int?
+
+}
