@@ -7,6 +7,7 @@ import { interactivityRouter } from "./routers/interactivity";
 import { weeklyCountRouter } from "./routers/weekly-count";
 import { triviaRouter } from "./routers/trivia";
 import { commitsRouter } from "./routers/commits";
+import { slackRouter } from "./routers/slack";
 /**
  * This is the primary router for your server.
  *
@@ -21,7 +22,9 @@ export const appRouter = createTRPCRouter({
   weeklyCount: weeklyCountRouter,
   trivia: triviaRouter,
   commits: commitsRouter,
-}); 
+  slack: slackRouter
+});
+
 
 // export type definition of API
 export type AppRouter = typeof appRouter;

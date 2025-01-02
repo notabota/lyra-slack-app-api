@@ -2,10 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT_ColumnFiltersState, type MRT_SortingState } from 'material-react-table';
-import { Typography, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Typography, Select as AntSelect, Space } from 'antd';
 import { useInfiniteList } from "@refinedev/core";
-
-const antdFont = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"';
+import { ShowButton } from "@refinedev/antd";
 
 type InteractivityData = {
   userId: number;
@@ -42,6 +41,14 @@ const columns: MRT_ColumnDef<InteractivityData>[] = [
     accessorKey: 'totalCount',
     header: 'Total Activity',
     enableColumnFilter: false,
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
+    enableColumnFilter: false,
+    Cell: ({ row }) => (
+      <ShowButton hideText size="small" recordItemId={row.original.userId} />
+    ),
   }
 ];
 
@@ -149,26 +156,24 @@ export default function ListInteractivity() {
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
     renderTopToolbarCustomActions: () => (
-      <FormControl sx={{ minWidth: 120, mr: 2 }}>
-        <InputLabel>Time Period</InputLabel>
-        <Select
+      <Space>
+        <AntSelect
           value={timespan}
-          label="Time Period"
-          onChange={(e) => setTimespan(e.target.value as typeof timespan)}
-          sx={{ fontFamily: antdFont }}
+          style={{ width: 150 }}
+          onChange={(value) => setTimespan(value)}
         >
-          <MenuItem value="1d" sx={{ fontFamily: antdFont }}>Last 24 Hours</MenuItem>
-          <MenuItem value="7d" sx={{ fontFamily: antdFont }}>Last 7 Days</MenuItem>
-          <MenuItem value="14d" sx={{ fontFamily: antdFont }}>Last 14 Days</MenuItem>
-          <MenuItem value="30d" sx={{ fontFamily: antdFont }}>Last 30 Days</MenuItem>
-          <MenuItem value="all" sx={{ fontFamily: antdFont }}>All Time</MenuItem>
-        </Select>
-      </FormControl>
+          <AntSelect.Option value="1d">Last 24 Hours</AntSelect.Option>
+          <AntSelect.Option value="7d">Last 7 Days</AntSelect.Option>
+          <AntSelect.Option value="14d">Last 14 Days</AntSelect.Option>
+          <AntSelect.Option value="30d">Last 30 Days</AntSelect.Option>
+          <AntSelect.Option value="all">All Time</AntSelect.Option>
+        </AntSelect>
+      </Space>
     ),
     renderBottomToolbarCustomActions: () => (
-      <Typography sx={{ fontFamily: antdFont }}>
+      <Typography.Text>
         Fetched {totalFetched} of {totalRows} rows
-      </Typography>
+      </Typography.Text>
     ),
     state: {
       columnFilters,
@@ -181,11 +186,6 @@ export default function ListInteractivity() {
     },
     rowCount: totalRows,
     pageCount: Math.ceil(totalRows / fetchSize),
-    muiTablePaperProps: {
-      sx: {
-        fontFamily: antdFont
-      }
-    }
   });
 
   return <MaterialReactTable table={table} />;

@@ -44,6 +44,11 @@ export const interactivityRouter = createTRPCRouter({
         };
       }
 
+      // Get all users first
+      const users = await ctx.db.user.findMany({
+        select: { id: true, displayName: true, realName: true }
+      });
+
       // Get message counts
       const messageCounts = await ctx.db.message.groupBy({
         by: ['userId'],
@@ -71,30 +76,16 @@ export const interactivityRouter = createTRPCRouter({
         where: dateFilter
       });
 
-      // Combine all unique userIds
-      const userIds = [...new Set([
-        ...messageCounts.map(m => m.userId),
-        ...reactionCounts.map(r => r.userId),
-        ...fileCounts.map(f => f.userId)
-      ])];
-
-      // Get user details
-      const users = await ctx.db.user.findMany({
-        where: { id: { in: userIds } },
-        select: { id: true, displayName: true, realName: true }
-      });
-
-      // Combine all counts
-      const combinedData = userIds.map(userId => {
-        const messageCount = messageCounts.find(m => m.userId === userId)?._count.userId ?? 0;
-        const reactionCount = reactionCounts.find(r => r.userId === userId)?._count.userId ?? 0;
-        const fileCount = fileCounts.find(f => f.userId === userId)?._count.userId ?? 0;
+      // Combine data for all users
+      const combinedData = users.map(user => {
+        const messageCount = messageCounts.find(m => m.userId === user.id)?._count.userId ?? 0;
+        const reactionCount = reactionCounts.find(r => r.userId === user.id)?._count.userId ?? 0;
+        const fileCount = fileCounts.find(f => f.userId === user.id)?._count.userId ?? 0;
         const totalCount = messageCount + reactionCount + fileCount;
-        const user = users.find(u => u.id === userId);
         
         return {
-          userId: Number(userId),
-          userName: user?.displayName || user?.realName || null,
+          userId: Number(user.id),
+          userName: user.displayName || user.realName || null,
           messageCount,
           reactionCount,
           fileCount,
@@ -135,6 +126,97 @@ export const interactivityRouter = createTRPCRouter({
         data: paginatedData,
         total: filteredData.length,
         hasNextPage: (skip ?? 0) + (take ?? 0) < filteredData.length
+      };
+    }),
+
+  getOne: publicProcedure
+    .meta({ openapi: { method: 'GET', path: '/interactivity/{id}' } })
+    .input(z.object({
+      id: z.number(),
+      timespan: z.enum(['7d', '14d', '30d']).optional(),
+    }))
+    .output(z.object({
+      data: z.object({
+        userId: z.number(),
+        userName: z.string().nullable(),
+        dailyStats: z.array(z.object({
+          date: z.string(),
+          messageCount: z.number(),
+          reactionCount: z.number(),
+          totalCount: z.number()
+        }))
+      })
+    }))
+    .query(async ({ ctx, input }) => {
+      // Get user details
+      const user = await ctx.db.user.findUniqueOrThrow({
+        where: { id: input.id },
+        select: { id: true, displayName: true, realName: true }
+      });
+
+      // Calculate date range
+      const days = parseInt(input.timespan?.replace('d', '') ?? '7');
+      const endDate = new Date();
+      endDate.setHours(23, 59, 59, 999); // End of day
+      const startDate = new Date(endDate);
+      startDate.setDate(endDate.getDate() - (days - 1)); // Subtract days-1 to include current day
+      startDate.setHours(0, 0, 0, 0); // Start of day
+
+      // Get daily message counts
+      const messages = await ctx.db.message.findMany({
+        where: {
+          userId: input.id,
+          timestamp: {
+            gte: Math.floor(startDate.getTime() / 1000).toString(),
+            lte: Math.floor(endDate.getTime() / 1000).toString()
+          }
+        }
+      });
+
+      // Get daily reaction counts  
+      const reactions = await ctx.db.reaction.findMany({
+        where: {
+          userId: input.id,
+          eventTs: {
+            gte: Math.floor(startDate.getTime() / 1000).toString(),
+            lte: Math.floor(endDate.getTime() / 1000).toString()
+          }
+        }
+      });
+
+      // Build daily stats array
+      const dailyStats = [];
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0]!;
+        const dayStart = new Date(d);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(d);
+        dayEnd.setHours(23, 59, 59, 999);
+        
+        const dayMessages = messages.filter(m => {
+          const ts = parseInt(m.timestamp);
+          return ts >= dayStart.getTime() / 1000 && ts <= dayEnd.getTime() / 1000;
+        }).length;
+
+        const dayReactions = reactions.filter(r => {
+          const ts = parseInt(r.eventTs);
+          return ts >= dayStart.getTime() / 1000 && ts <= dayEnd.getTime() / 1000;
+        }).length;
+        
+        dailyStats.push({
+          date: dateStr,
+          messageCount: dayMessages,
+          reactionCount: dayReactions,
+          totalCount: dayMessages + dayReactions
+        });
+      }
+
+      return {
+        data: {
+          userId: Number(user.id),
+          userName: user.displayName || user.realName || null,
+          dailyStats
+        }
       };
     }),
 });

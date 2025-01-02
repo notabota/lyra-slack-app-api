@@ -42,6 +42,7 @@ export default function RefineLayout({ children }: { children: React.ReactNode }
               {
                 name: "interactivity",
                 list: "/refine/interactivity",
+                show: "/refine/interactivity/:id",
                 meta: { label: "Interactivity" },
               },
               {
