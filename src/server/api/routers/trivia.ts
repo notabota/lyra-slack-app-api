@@ -67,18 +67,34 @@ export const triviaRouter = createTRPCRouter({
         ORDER BY count DESC
       ` as QueryResult[];
 
-      console.log(broResults);
-      console.log(sorryResults);
-      
-      const topBro = broResults[0];
-      const topSorry = sorryResults[0];
-
-      console.log(topBro);
-      console.log(topSorry);
-
-      if (!topBro || !topSorry) {
-        throw new Error("No results found");
+      if (!broResults.length && !sorryResults.length) {
+        return {
+          data: {
+            bro: {
+              userName: "No users found",
+              messageCount: 0,
+              profileImage: null,
+              randomLine: "No messages found",
+              randomLineChannelId: "0",
+              randomLineChannelName: "unknown",
+              randomLineTimestamp: "0"
+            },
+            sorry: {
+              userName: "No users found", 
+              messageCount: 0,
+              profileImage: null,
+              randomLine: "No messages found",
+              randomLineChannelId: "0",
+              randomLineChannelName: "unknown",
+              randomLineTimestamp: "0"
+            }
+          }
+        };
       }
+
+      const topBro = broResults[0] || { userId: 0, count: BigInt(0) };
+      const topSorry = sorryResults[0] || { userId: 0, count: BigInt(0) };
+
       // Get user names for tag replacement
       const allUsers = await ctx.db.user.findMany({
         select: {
@@ -96,19 +112,13 @@ export const triviaRouter = createTRPCRouter({
         ])
       );
 
-      console.log(userIdToName);
-
       const replaceUserTags = (text: string) => {
         return text.replace(/<@([A-Z0-9]+)>/g, (match, userId) => {
-          console.log("--------------------------------");
-          console.log(match, userId);
-          console.log(userIdToName.get(userId));
-          console.log("--------------------------------");
           return `@${userIdToName.get(userId) || match}`;
         });
       };
 
-      const randomBroMessage = await ctx.db.$queryRaw`
+      const randomBroMessage = topBro.userId ? await ctx.db.$queryRaw`
         SELECT m.text, c."channelId", m.timestamp, c.name as "channelName"
         FROM "message" m
         JOIN "channel" c ON m."channelId" = c.id
@@ -118,9 +128,9 @@ export const triviaRouter = createTRPCRouter({
         AND m."createdAt" <= ${today}
         ORDER BY random()
         LIMIT 1
-      ` as RandomMessage[];
+      ` as RandomMessage[] : [];
 
-      const randomSorryMessage = await ctx.db.$queryRaw`
+      const randomSorryMessage = topSorry.userId ? await ctx.db.$queryRaw`
         SELECT m.text, c."channelId", m.timestamp, c.name as "channelName"
         FROM "message" m
         JOIN "channel" c ON m."channelId" = c.id
@@ -130,9 +140,9 @@ export const triviaRouter = createTRPCRouter({
         AND m."createdAt" <= ${today}
         ORDER BY random()
         LIMIT 1
-      ` as RandomMessage[];
+      ` as RandomMessage[] : [];
 
-      const broUser = await ctx.db.user.findFirst({
+      const broUser = topBro.userId ? await ctx.db.user.findFirst({
         where: {
           id: topBro.userId
         },
@@ -141,9 +151,9 @@ export const triviaRouter = createTRPCRouter({
           lastName: true,
           image: true
         }
-      });
+      }) : null;
 
-      const sorryUser = await ctx.db.user.findFirst({
+      const sorryUser = topSorry.userId ? await ctx.db.user.findFirst({
         where: {
           id: topSorry.userId
         },
@@ -152,13 +162,13 @@ export const triviaRouter = createTRPCRouter({
           lastName: true,
           image: true
         }
-      });
+      }) : null;
 
       const data = {
         bro: {
             userName: broUser?.firstName && broUser?.lastName 
               ? `${broUser.firstName} ${broUser.lastName}`
-              : `User ${topBro.userId}`,
+              : topBro.userId ? `User ${topBro.userId}` : "No users found",
             messageCount: Number(topBro.count),
             profileImage: broUser?.image ?? null,
             randomLine: replaceUserTags(randomBroMessage[0]?.text ?? "No messages found"),
@@ -169,7 +179,7 @@ export const triviaRouter = createTRPCRouter({
           sorry: {
             userName: sorryUser?.firstName && sorryUser?.lastName
               ? `${sorryUser.firstName} ${sorryUser.lastName}`
-              : `User ${topSorry.userId}`,
+              : topSorry.userId ? `User ${topSorry.userId}` : "No users found",
             messageCount: Number(topSorry.count),
             profileImage: sorryUser?.image ?? null,
             randomLine: replaceUserTags(randomSorryMessage[0]?.text ?? "No messages found"),
@@ -178,8 +188,6 @@ export const triviaRouter = createTRPCRouter({
             randomLineTimestamp: randomSorryMessage[0]?.timestamp ?? "0"
           }
         };
-        
-      console.log(data);
 
       return {
         data
