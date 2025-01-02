@@ -14,8 +14,11 @@ export const env = createEnv({
     RAILWAY_TOKEN: z.string(),
     SLACK_CLIENT_ID: z.string(),
     SLACK_CLIENT_SECRET: z.string(),
+    SLACK_SIGNING_SECRET: z.string(),
+    SLACK_BOT_TOKEN: z.string(),
     NEXTAUTH_URL: z.string(),
     NEXTAUTH_SECRET: z.string(),
+    OPENAI_API_KEY: z.string(),
   },
 
   /**
@@ -37,8 +40,11 @@ export const env = createEnv({
     RAILWAY_TOKEN: process.env.RAILWAY_TOKEN,
     SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID,
     SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET,
+    SLACK_SIGNING_SECRET: process.env.SLACK_SIGNING_SECRET,
+    SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
