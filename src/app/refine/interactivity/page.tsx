@@ -21,6 +21,7 @@ const columns: MRT_ColumnDef<InteractivityData>[] = [
     accessorKey: 'userName',
     header: 'User Name',
     filterVariant: 'autocomplete',
+    enableColumnFilter: false,
   },
   {
     accessorKey: 'messageCount',
@@ -142,7 +143,7 @@ export default function ListInteractivity() {
     initialState: { showColumnFilters: true },
     muiTableContainerProps: {
       ref: tableContainerRef,
-      sx: { maxHeight: '600px' },
+      sx: { height: 'calc(100vh - 150px)' }, // Subtract header height if needed
       onScroll: (event) => fetchMoreOnBottomReached(event.target as HTMLDivElement),
     },
     muiToolbarAlertBannerProps: isError

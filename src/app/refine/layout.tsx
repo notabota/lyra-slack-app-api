@@ -45,12 +45,12 @@ export default function RefineLayout({ children }: { children: React.ReactNode }
                 show: "/refine/interactivity/:id",
                 meta: { label: "Interactivity" },
               },
-              {
-                name: "messages",
-                list: "/refine/messages",
-                show: "/refine/messages/:id",
-                meta: { label: "Messages" },
-              },
+              // {
+              //   name: "messages",
+              //   list: "/refine/messages",
+              //   show: "/refine/messages/:id",
+              //   meta: { label: "Messages" },
+              // },
               {
                 icon: <Github width={20} height={20} className="ml-[-4px]" />,
                 name: "github",
