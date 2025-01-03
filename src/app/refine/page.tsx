@@ -11,16 +11,13 @@ import { ThemedTitleV2 } from "@refinedev/antd";
 import { ThemedLayoutV2 } from "@refinedev/antd";
 
 export default function App(): JSX.Element {
-    return (
-        <Authenticated
-            key="authenticated-routes"
-            redirectOnFail="/refine/login"
-        >
-            <ThemedLayoutV2 Title={(props) => (
-                <ThemedTitleV2 {...props} text="Lyratatouille" />
-            )}>
-                <NavigateToResource resource="trivia" />
-            </ThemedLayoutV2>
-            </Authenticated>
-    );
+  return (
+    <Authenticated key="authenticated-routes" redirectOnFail="/refine/login">
+      <ThemedLayoutV2
+        Title={(props) => <ThemedTitleV2 {...props} text="Lyratatouille" />}
+      >
+        <NavigateToResource resource="trivia" />
+      </ThemedLayoutV2>
+    </Authenticated>
+  );
 }

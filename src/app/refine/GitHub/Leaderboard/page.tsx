@@ -62,12 +62,6 @@ export default function Leaderboard() {
     pageSize: fetchSize,
   });
 
-  useEffect(() => {
-    console.log("-----------------FILTERS-----------------------");
-    console.log(columnFilters);
-    console.log("----------------------------------------");
-  }, [columnFilters]);
-
   const { data, fetchNextPage, isError, isFetching, isLoading } =
     useInfiniteList<LeaderboardData>({
       resource: "commits-count-of-users",
@@ -77,7 +71,7 @@ export default function Leaderboard() {
       },
       filters: columnFilters.map((filter: any) => ({
         field: filter.id,
-        operator: filter.id === "count" ? "between" : "contains",
+        operator: filter.id === "count" ? "between" : "contains" ,
         value: filter.value,
       })),
       sorters: sorting.map((sort) => ({
@@ -143,7 +137,7 @@ export default function Leaderboard() {
     manualPagination: true,
     enableFacetedValues: true,
     initialState: {
-      //   showColumnFilters: true,
+      showColumnFilters: true,
       sorting: [{ id: "count", desc: false }],
     },
     muiTableContainerProps: {
@@ -169,19 +163,8 @@ export default function Leaderboard() {
   });
 
   return (
-    <ThemedLayoutV2>
-      <button className="p-2 bg-blue-500 text-white rounded-md mb-4"
-        onClick={() => {
-          window.open(
-            "https://github.com/apps/Prod-Lyra-GitHub-Dashboard-App/installations/new",
-            "_blank",
-            "width=600,height=800",
-          );
-        }}
-      >
-        Connect your GitHub account
-      </button>
+    <div>
       <MaterialReactTable table={table} />
-    </ThemedLayoutV2>
+    </div>
   );
 }

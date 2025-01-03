@@ -34,8 +34,6 @@ export const commitsRouter = createTRPCRouter({
       console.log("FILTERS", input._filter);
       console.log("FILTERS", input._value);
       console.log("FILTERS", input._operator);
-      console.log("SORT", input._sort);
-      console.log("ORDER", input._order);
       const skip = input._start;
       const take = input._end ? input._end - (input._start ?? 0) : undefined;
 

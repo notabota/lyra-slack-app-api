@@ -8,6 +8,7 @@ import { weeklyCountRouter } from "./routers/weekly-count";
 import { triviaRouter } from "./routers/trivia";
 import { commitsRouter } from "./routers/commits";
 import { slackRouter } from "./routers/slack";
+import { repositoriesRouter } from "./routers/repositories";
 /**
  * This is the primary router for your server.
  *
@@ -22,7 +23,8 @@ export const appRouter = createTRPCRouter({
   weeklyCount: weeklyCountRouter,
   trivia: triviaRouter,
   commits: commitsRouter,
-  slack: slackRouter
+  slack: slackRouter,
+  repositories: repositoriesRouter
 });
 
 

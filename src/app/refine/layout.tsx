@@ -4,7 +4,7 @@ import { Authenticated, Refine } from "@refinedev/core";
 import { dataProvider } from "~/providers/data-provider";
 import routerProvider from "@refinedev/nextjs-router";
 import { RefineThemes, ThemedLayoutV2, ThemedTitleV2, useNotificationProvider } from "@refinedev/antd";
-import { ArrowBigUpDash, ChartNoAxesCombined, Github } from "lucide-react";
+import { ArrowBigUpDash, ChartNoAxesCombined, FolderGit, FolderGit2, Github } from "lucide-react";
 import { App as AntdApp, ConfigProvider } from "antd";
 
 import "@refinedev/antd/dist/reset.css";
@@ -57,16 +57,23 @@ export default function RefineLayout({ children }: { children: React.ReactNode }
                 meta: { label: "GitHub" },
               },
               {
+                icon: <FolderGit2 width={20} height={20} className="ml-[-4px]" />,
+                name: "github-repositories",
+                list: "/refine/github/repositories",
+                meta: { label: "Repositories" },
+                parentName: "github",
+              },
+              {
                 icon: <ArrowBigUpDash width={20} height={20} className="ml-[-4px]" />,
                 name: "github-leaderboard",
-                list: "/refine/GitHub/Leaderboard",
+                list: "/refine/github/leaderboard",
                 meta: { label: "Leaderboard" },
                 parentName: "github",
               },
               {
                 icon: <ChartNoAxesCombined width={20} height={20} className="ml-[-4px]" />,
                 name: "github-stats",
-                list: "/refine/GitHub/Stats",
+                list: "/refine/github/stats",
                 meta: { label: "Your Stats" },
                 parentName: "github",
               },

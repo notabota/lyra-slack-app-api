@@ -48,6 +48,7 @@
     "next-auth": "^4.24.11",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-draggable": "^4.4.6",
     "recharts": "^2.15.0",
     "server-only": "^0.0.1",
     "superjson": "^2.2.1",

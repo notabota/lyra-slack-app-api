@@ -27,6 +27,7 @@ export const interactivityRouter = createTRPCRouter({
       hasNextPage: z.boolean()
     }))
     .query(async ({ ctx, input }) => {
+      console.log(input)
       const skip = input._start;
       const take = input._end ? input._end - (input._start ?? 0) : undefined;
 
