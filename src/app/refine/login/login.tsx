@@ -1,6 +1,5 @@
 import React from "react";
 import { AuthPage } from "@refinedev/antd";
-import Link from "next/link";
 
 export default function Login() {
   return (

@@ -10,7 +10,7 @@ import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import { db } from "~/server/db";
+import { db, dbGithub } from "~/server/db";
 import { OpenApiMeta } from 'trpc-to-openapi';
 import { type NextRequest, type NextResponse } from "next/server";
 
@@ -29,6 +29,7 @@ import { type NextRequest, type NextResponse } from "next/server";
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   return {
     db,
+    dbGithub,
     ...opts,
   };
 };

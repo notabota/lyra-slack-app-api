@@ -6,7 +6,9 @@ import { fileCountRouter } from "./routers/files-count";
 import { interactivityRouter } from "./routers/interactivity";
 import { weeklyCountRouter } from "./routers/weekly-count";
 import { triviaRouter } from "./routers/trivia";
+import { commitsRouter } from "./routers/commits";
 import { slackRouter } from "./routers/slack";
+import { repositoriesRouter } from "./routers/repositories";
 /**
  * This is the primary router for your server.
  *
@@ -20,8 +22,11 @@ export const appRouter = createTRPCRouter({
   interactivity: interactivityRouter,
   weeklyCount: weeklyCountRouter,
   trivia: triviaRouter,
-  slack: slackRouter
+  commits: commitsRouter,
+  slack: slackRouter,
+  repositories: repositoriesRouter
 });
+
 
 // export type definition of API
 export type AppRouter = typeof appRouter;
