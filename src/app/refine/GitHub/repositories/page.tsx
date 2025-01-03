@@ -278,7 +278,6 @@ export default function Repositories() {
 
   const handleDragStop = (
     popupId: string,
-    e: any,
     data: { x: number; y: number },
   ) => {
     setOpenPopups((prev) =>
@@ -318,7 +317,7 @@ export default function Repositories() {
             key={popup.id}
             handle=".handle"
             position={popup.position}
-            onStop={(e, data) => handleDragStop(popup.id, e, data)}
+            onStop={(e, data) => handleDragStop(popup.id, data)}
             nodeRef={nodeRef}
             
           >

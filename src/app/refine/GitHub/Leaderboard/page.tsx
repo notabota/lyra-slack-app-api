@@ -69,7 +69,7 @@ export default function Leaderboard() {
         pageSize: pagination.pageSize,
         current: (pagination.pageIndex ?? 0) + 1,
       },
-      filters: columnFilters.map((filter: any) => ({
+      filters: columnFilters.map((filter) => ({
         field: filter.id,
         operator: filter.id === "count" ? "between" : "contains" ,
         value: filter.value,
