@@ -29,32 +29,30 @@ interface PieChartComponentProps {
 }
 
 export function ChannelMessagePieChart({ data = [], isLoading }: PieChartComponentProps) {
-  if (isLoading) {
-    return (
-      <Card>
-        <div className="flex h-[450px] items-center justify-center">
-          <Spin size="large" />
-        </div>
-      </Card>
-    )
-  }
-
   const chartData = React.useMemo(() => {
     const topChannels = data.slice(0, 5)
     const otherChannels = data.slice(5)
     const otherCount = otherChannels.reduce((sum, channel) => sum + channel.messageCount, 0)
 
+    const colors = [
+      "hsl(262, 83%, 58%)", // Modern Purple
+      "hsl(346, 77%, 49%)", // Modern Red
+      "hsl(15, 100%, 55%)", // Modern Orange
+      "hsl(189, 94%, 43%)", // Modern Cyan
+      "hsl(142, 71%, 45%)"  // Modern Green
+    ]
+
     const mappedData = topChannels.map((item, index) => ({
       channel: item.channelName || "Unknown Channel",
       messages: item.messageCount,
-      fill: `hsl(var(--chart-${index + 1}))`
+      fill: colors[index]
     }))
 
     if (otherCount > 0) {
       mappedData.push({
         channel: "Other Channels",
         messages: otherCount,
-        fill: `hsl(var(--chart-6, 200 10% 50%))`
+        fill: "hsl(215, 20%, 65%)" // Grey for other channels
       })
     }
 
@@ -81,6 +79,16 @@ export function ChannelMessagePieChart({ data = [], isLoading }: PieChartCompone
   const totalMessages = React.useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.messages, 0)
   }, [chartData])
+
+  if (isLoading) {
+    return (
+      <Card>
+        <div className="flex h-[450px] items-center justify-center">
+          <Spin size="large" />
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <Card>

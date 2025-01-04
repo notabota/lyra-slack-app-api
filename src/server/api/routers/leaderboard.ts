@@ -64,7 +64,7 @@ export const leaderboardRouter = createTRPCRouter({
       ]);
 
       // Combine data for all users
-      let combinedData = users.map(user => {
+      const combinedData = users.map(user => {
         const messageCount = messageCounts.find(m => m.userId === user.id)?._count.userId ?? 0;
         const reactionCount = reactionCounts.find(r => r.userId === user.id)?._count.userId ?? 0;
         const fileCount = fileCounts.find(f => f.userId === user.id)?._count.userId ?? 0;

@@ -5,7 +5,7 @@ import { MaterialReactTable, useMaterialReactTable, type MRT_ColumnDef, type MRT
 import { Typography, AutoComplete, Space, Modal } from 'antd';
 import { useInfiniteList, useCustom, useApiUrl } from "@refinedev/core";
 import { useNavigation } from "@refinedev/core";
-import { ShowInteractivityContent } from './[id]/page';
+import ShowInteractivityContent from './[id]/ShowInteractivityContent';
 
 type InteractivityData = {
   userId: number;

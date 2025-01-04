@@ -67,9 +67,9 @@ export default function ListInteractivity() {
 
   const getRankIcon = (index: number) => {
     const icons = [
-      <Trophy size={28} color="#FFD700" />,
-      <Medal size={28} color="#C0C0C0" />,
-      <Award size={28} color="#CD7F32" />
+      <Trophy key="trophy" size={28} color="#FFD700" />,
+      <Medal key="medal" size={28} color="#C0C0C0" />,
+      <Award key="award" size={28} color="#CD7F32" />
     ];
     return icons[index] || null;
   };
