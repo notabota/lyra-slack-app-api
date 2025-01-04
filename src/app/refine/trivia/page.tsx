@@ -28,11 +28,11 @@ export default function ListTrivia() {
   return (
     <List>
       <Row gutter={16} justify="center">
-        <Col span={12}>
+        <Col span={8}>
           <Card
             key={`${data?.data.bro.userId}-1`}
             style={{
-              width: 300,
+              width: '100%',
               margin: '20px auto',
               boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
             }}
@@ -59,11 +59,42 @@ export default function ListTrivia() {
             </Paragraph>
           </Card>
         </Col>
-        <Col span={12}>
+        <Col span={8}>
+          <Card
+            key={`${data?.data.mostPinged.userId}-3`}
+            style={{
+              width: '100%',
+              margin: '20px auto',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+            }}
+          >
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <Avatar
+                size={100}
+                src={data?.data.mostPinged.profileImage}
+                style={{ border: '4px solid #1890ff' }}
+              />
+            </div>
+            <Title level={3} style={{ textAlign: 'center', margin: '16px 0' }}>
+              {data?.data.mostPinged.userName || `User ${data?.data.mostPinged.userId}`}
+            </Title>
+            <Paragraph style={{ textAlign: 'center' }}>
+              Was pinged {data?.data.mostPinged.messageCount} times in the last 7 days
+            </Paragraph>
+            <Paragraph italic style={{ textAlign: 'center', color: '#666' }}>
+              <a href={`https://lyra-technologies.slack.com/archives/${data?.data.mostPinged.randomLineChannelId}/p${formatTimestamp(data?.data.mostPinged.randomLineTimestamp)}`} target="_blank" rel="noopener noreferrer">
+                "{data?.data.mostPinged.randomLine}"
+              </a>
+              <br />
+              <small>in #{data?.data.mostPinged.randomLineChannelName}</small>
+            </Paragraph>
+          </Card>
+        </Col>
+        <Col span={8}>
           <Card
             key={`${data?.data.sorry.userId}-2`}
             style={{
-              width: 300,
+              width: '100%',
               margin: '20px auto',
               boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
             }}
