@@ -10,56 +10,81 @@ const token = process.env.SLACK_USER_TOKEN;
 const web = new WebClient(token);
 
 export const slackRouter = createTRPCRouter({
-  inviteUser: publicProcedure
-    .meta({ openapi: { method: 'POST', path: '/slack/invite' } })
-    .input(z.object({
-      email: z.string().email(),
-      channel_ids: z.tuple([z.string()]).rest(z.string()),
-      team_id: z.string().default('T05U5TCF695'),
-    }))
+  getChannels: publicProcedure
+    .meta({ openapi: { method: 'GET', path: '/slack' } })
+    .input(z.object({}).optional())
     .output(z.object({
-      ok: z.boolean(),
+      data: z.array(z.object({
+        id: z.number(),
+        name: z.string(),
+      })),
       error: z.string().optional()
     }))
-    .mutation(async ({ input }) => {
+    .query(async ({ ctx }) => {
       try {
-        const response = await web.admin.users.invite({
-          email: input.email,
-          channel_ids: input.channel_ids,
-          team_id: input.team_id,
-          is_restricted: true,
+        const channels = await ctx.db.channel.findMany({
+          select: {
+            id: true,
+            name: true,
+          },
+          where: {
+            isChannel: true,
+          }
         });
-        return { ok: true };
+
+        console.log("--------------- CHANNELS -----------------");
+        console.log(channels);
+        console.log("--------------------------------");
+
+        return {
+          data: channels.map(channel => ({
+            id: Number(channel.id),
+            name: channel.name ?? '',
+          }))
+        };
       } catch (error) {
         return {
-          ok: false,
+          data: [],
           error: error instanceof Error ? error.message : 'Unknown error occurred'
         };
       }
-    }),
-    sendMessage: publicProcedure
-    .meta({ openapi: { method: 'POST', path: '/slack/message' } })
-    .input(z.object({
-      channel: z.string(),
-      text: z.string(),
-    }))
+    })
+  ,
+  getTeamMembers: publicProcedure
+    .meta({ openapi: { method: 'GET', path: '/slack/team/members' } })
+    .input(z.object({}).optional())
     .output(z.object({
-      ok: z.boolean(),
+      data: z.array(z.object({
+        id: z.number(),
+        name: z.string().nullable()
+      })),
       error: z.string().optional()
     }))
-    .mutation(async ({ input }) => {
+    .query(async ({ ctx }) => {
       try {
-        const response = await web.chat.postMessage({
-          channel: input.channel,
-          text: input.text,
+        const users = await ctx.db.user.findMany({
+          where: {
+            teamId: "T05U5TCF695",
+            isBot: false
+          },
+          select: {
+            id: true,
+            displayName: true,
+            realName: true
+          }
         });
-        return { ok: true };
+
+        return {
+          data: users.map(user => ({
+            id: Number(user.id),
+            name: user.displayName || user.realName || null
+          }))
+        };
       } catch (error) {
         return {
-          ok: false, 
+          data: [],
           error: error instanceof Error ? error.message : 'Unknown error occurred'
         };
       }
     })
 });
-

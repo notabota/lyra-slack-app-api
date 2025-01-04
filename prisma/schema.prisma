@@ -9,7 +9,7 @@ datasource db {
 
 model file {
   id                 BigInt   @id @default(autoincrement())
-  fileId             String
+  fileId             String   @unique
   fileType           String
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -17,7 +17,7 @@ model file {
   title              String?
   pretty_type        String
   mimetype           String
-  timestamp          BigInt
+  timestamp          BigInt   @unique
   size               BigInt
   mode               String
   urlPrivate         String?
@@ -52,7 +52,7 @@ model reaction {
   id        BigInt   @id @default(autoincrement())
   reaction  String
   itemUser  String
-  eventTs   String
+  eventTs   String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   messageId BigInt
@@ -63,7 +63,7 @@ model reaction {
 
 model channel {
   id            BigInt    @id @default(autoincrement())
-  channelId     String
+  channelId     String    @unique
   name          String?
   updated       BigInt?
   creator       String?
@@ -85,7 +85,7 @@ model channel {
 
 model user {
   id                     BigInt     @id @default(autoincrement())
-  userId                 String
+  userId                 String     @unique
   name                   String?
   realName               String?
   displayName            String?
@@ -108,6 +108,7 @@ model user {
   createdAt              DateTime   @default(now())
   updatedAt              DateTime   @updatedAt
   updated                BigInt?
+  email                  String?
   file                   file[]
   message                message[]
   reaction               reaction[]

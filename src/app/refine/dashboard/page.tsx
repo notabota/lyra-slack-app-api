@@ -19,7 +19,7 @@ import { useState, useEffect } from "react";
 export default function Dashboard() {
   const [timespan, setTimespan] = useState("7d");
 
-  const { data: messageData, isLoading: messageLoading } = useList({
+  const { data: messageData, isFetching: messageFetching } = useList({
     resource: "messages-count", 
     filters: [{ field: "timespan", operator: "eq", value: timespan }],
     meta: {
@@ -30,7 +30,7 @@ export default function Dashboard() {
     }
   });
 
-  const { data: reactionData, isLoading: reactionLoading } = useList({
+  const { data: reactionData, isFetching: reactionFetching } = useList({
     resource: "reactions-count",
     filters: [{ field: "timespan", operator: "eq", value: timespan }],
     meta: {
@@ -41,7 +41,7 @@ export default function Dashboard() {
     }
   });
 
-  const { data: fileData, isLoading: fileLoading } = useList({
+  const { data: fileData, isFetching: fileFetching } = useList({
     resource: "files-count",
     filters: [{ field: "timespan", operator: "eq", value: timespan }],
     meta: {
@@ -49,7 +49,7 @@ export default function Dashboard() {
     }
   });
 
-  const { data: weeklyData, isLoading: weeklyLoading } = useList({
+  const { data: weeklyData, isFetching: weeklyFetching } = useList({
     resource: "weekly-count",
     filters: [{ field: "timespan", operator: "eq", value: timespan }],
     meta: {
@@ -82,15 +82,6 @@ export default function Dashboard() {
     fileCount: item?.fileCount
   })) ?? [];
 
-  useEffect(() => {
-    console.log("Loading states changed:", {
-      messageLoading,
-      reactionLoading,
-      fileLoading,
-      weeklyLoading
-    });
-  }, [messageLoading, reactionLoading, fileLoading, weeklyLoading]);
-
   return (
     <Layout>
       <Row gutter={[16, 16]}>
@@ -112,36 +103,36 @@ export default function Dashboard() {
         </Col>
         <Col span={8}>
           <Card title="Message Count Distribution">
-            <Spin spinning={messageLoading} tip="Loading chart...">
-              <div className={messageLoading ? "h-[300px] flex items-center justify-center" : ""}>
-                {!messageLoading && <MessagePieChart data={messageChartData} />}
+            <Spin spinning={messageFetching} tip="Loading chart...">
+              <div className={messageFetching ? "h-[300px] flex items-center justify-center" : ""}>
+                {!messageFetching && <MessagePieChart data={messageChartData} />}
               </div>
             </Spin>
           </Card>
         </Col>
         <Col span={8}>
           <Card title="Reaction Count Distribution">
-            <Spin spinning={reactionLoading} tip="Loading chart...">
-              <div className={reactionLoading ? "h-[300px] flex items-center justify-center" : ""}>
-                {!reactionLoading && <ReactionPieChart data={reactionChartData} />}
+            <Spin spinning={reactionFetching} tip="Loading chart...">
+              <div className={reactionFetching ? "h-[300px] flex items-center justify-center" : ""}>
+                {!reactionFetching && <ReactionPieChart data={reactionChartData} />}
               </div>
             </Spin>
           </Card>
         </Col>
         <Col span={8}>
           <Card title="File Count Distribution">
-            <Spin spinning={fileLoading} tip="Loading chart...">
-              <div className={fileLoading ? "h-[300px] flex items-center justify-center" : ""}>
-                {!fileLoading && <FilePieChart data={fileChartData} />}
+            <Spin spinning={fileFetching} tip="Loading chart...">
+              <div className={fileFetching ? "h-[300px] flex items-center justify-center" : ""}>
+                {!fileFetching && <FilePieChart data={fileChartData} />}
               </div>
             </Spin>
           </Card>
         </Col>
         <Col span={24}>
           <Card title="Weekly Activity">
-            <Spin spinning={weeklyLoading} tip="Loading chart...">
-              <div className={weeklyLoading ? "h-[300px] flex items-center justify-center" : ""}>
-                {!weeklyLoading && <WeeklyCountBar weeklyChartData={weeklyChartData} />}
+            <Spin spinning={weeklyFetching} tip="Loading chart...">
+              <div className={weeklyFetching ? "h-[300px] flex items-center justify-center" : ""}>
+                {!weeklyFetching && <WeeklyCountBar weeklyChartData={weeklyChartData} />}
               </div>
             </Spin>
           </Card>

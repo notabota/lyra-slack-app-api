@@ -16,12 +16,12 @@ interface TriviaItem {
 export default function ListTrivia() {
   const apiUrl = useApiUrl();
   
-  const { data, isLoading } = useCustom({
+  const { data, isFetching } = useCustom({
     url: `${apiUrl}/trivia`,
     method: "get",
   });
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isFetching) return <div>Loading...</div>;
 
   const formatTimestamp = (timestamp: string) => timestamp.replace('.', '');
 

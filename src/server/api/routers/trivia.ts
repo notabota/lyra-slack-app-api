@@ -42,17 +42,16 @@ export const triviaRouter = createTRPCRouter({
       }),
     }))
     .query(async ({ ctx, input }) => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const sevenDaysAgo = new Date(today);
-      sevenDaysAgo.setDate(today.getDate() - 7);
+      const now = new Date();
+      const sevenDaysAgo = new Date(now);
+      sevenDaysAgo.setDate(now.getDate() - 7);
       
       const broResults = await ctx.db.$queryRaw`
         SELECT "userId", COUNT(*) as count
         FROM "message"
         WHERE text ~* '\\mbro\\M'
         AND "createdAt" >= ${sevenDaysAgo}
-        AND "createdAt" <= ${today}
+        AND "createdAt" <= ${now}
         GROUP BY "userId"
         ORDER BY count DESC
       ` as QueryResult[];
@@ -62,7 +61,7 @@ export const triviaRouter = createTRPCRouter({
         FROM "message"
         WHERE text ~* '\\msorry\\M'
         AND "createdAt" >= ${sevenDaysAgo}
-        AND "createdAt" <= ${today}
+        AND "createdAt" <= ${now}
         GROUP BY "userId"
         ORDER BY count DESC
       ` as QueryResult[];
@@ -125,7 +124,7 @@ export const triviaRouter = createTRPCRouter({
         WHERE m.text ~* '\\mbro\\M'
         AND m."userId" = ${topBro.userId}
         AND m."createdAt" >= ${sevenDaysAgo}
-        AND m."createdAt" <= ${today}
+        AND m."createdAt" <= ${now}
         ORDER BY random()
         LIMIT 1
       ` as RandomMessage[] : [];
@@ -137,7 +136,7 @@ export const triviaRouter = createTRPCRouter({
         WHERE m.text ~* '\\msorry\\M'
         AND m."userId" = ${topSorry.userId}
         AND m."createdAt" >= ${sevenDaysAgo}
-        AND m."createdAt" <= ${today}
+        AND m."createdAt" <= ${now}
         ORDER BY random()
         LIMIT 1
       ` as RandomMessage[] : [];

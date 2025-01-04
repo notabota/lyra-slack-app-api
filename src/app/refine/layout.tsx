@@ -4,7 +4,7 @@ import { Authenticated, Refine } from "@refinedev/core";
 import { dataProvider } from "~/providers/data-provider";
 import routerProvider from "@refinedev/nextjs-router";
 import { RefineThemes, ThemedLayoutV2, ThemedTitleV2, useNotificationProvider } from "@refinedev/antd";
-import { ArrowBigUpDash, ChartNoAxesCombined, FolderGit, FolderGit2, Github } from "lucide-react";
+import { ArrowBigUpDash, ChartNoAxesCombined, FolderGit, FolderGit2, Github, Gamepad2, LayoutDashboard, Activity, Trophy } from "lucide-react";
 import { App as AntdApp, ConfigProvider } from "antd";
 
 import "@refinedev/antd/dist/reset.css";
@@ -33,17 +33,26 @@ export default function RefineLayout({ children }: { children: React.ReactNode }
                 name: "trivia",
                 list: "/refine/trivia",
                 meta: { label: "Trivia" },
+                icon: <Gamepad2 width={20} height={20} className="ml-[-4px]" />
               },
               {
                 name: "dashboard",
                 list: "/refine/dashboard",
                 meta: { label: "Dashboard" },
+                icon: <LayoutDashboard width={20} height={20} className="ml-[-4px]" />
               },
               {
                 name: "interactivity",
                 list: "/refine/interactivity",
                 show: "/refine/interactivity/:id",
                 meta: { label: "Interactivity" },
+                icon: <Activity width={20} height={20} className="ml-[-4px]" />
+              },
+              {
+                name: "leaderboard",
+                list: "/refine/leaderboard",
+                meta: { label: "Leaderboard" },
+                icon: <Trophy width={20} height={20} className="ml-[-4px]" />
               },
               // {
               //   name: "messages",

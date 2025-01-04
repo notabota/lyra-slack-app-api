@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { WebClient } from "@slack/web-api";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -11,7 +12,8 @@ export const interactivityRouter = createTRPCRouter({
       _sort: z.string().optional(), 
       _order: z.string().optional(),
       timespan: z.enum(['1d', '7d', '14d', '30d', 'all']).optional(),
-      userName: z.string().optional()
+      userId: z.number().optional(),
+      channelId: z.number().optional()
     }))
     .output(z.object({
       data: z.array(z.object({
@@ -45,41 +47,91 @@ export const interactivityRouter = createTRPCRouter({
         };
       }
 
-      // Get all users first
+      // Get all users who are team members and not bots
       const users = await ctx.db.user.findMany({
+        where: {
+          teamId: "T05U5TCF695",
+          isBot: false,
+          ...(input.userId ? { id: input.userId } : {})
+        },
         select: { id: true, displayName: true, realName: true }
       });
+      const userIds = users.map(user => user.id);
 
-      // Get message counts
-      const messageCounts = await ctx.db.message.groupBy({
+      // Add channel filter if provided
+      const channelFilter = input.channelId ? { channelId: input.channelId } : {};
+
+      // Get message counts and message IDs for the channel if filtered
+      const messageData = await ctx.db.message.groupBy({
         by: ['userId'],
         _count: {
           userId: true
         },
-        where: dateFilter
+        where: {
+          ...dateFilter,
+          ...channelFilter,
+          userId: {
+            in: userIds
+          }
+        }
       });
 
-      // Get reaction counts
+      // If channel filter is applied, get message IDs for that channel
+      let messageIds: number[] = [];
+      if (input.channelId) {
+        const channelMessages = await ctx.db.message.findMany({
+          where: {
+            ...dateFilter,
+            ...channelFilter,
+          },
+          select: {
+            id: true
+          }
+        });
+        messageIds = channelMessages.map(m => Number(m.id));
+      }
+
+      // Get reaction counts, filtered by message IDs if channel filter is applied
       const reactionCounts = await ctx.db.reaction.groupBy({
         by: ['userId'],
         _count: {
           userId: true
         },
-        where: dateFilter
+        where: {
+          ...dateFilter,
+          userId: {
+            in: userIds
+          },
+          ...(input.channelId ? {
+            messageId: {
+              in: messageIds
+            }
+          } : {})
+        }
       });
 
-      // Get file counts
+      // Get file counts, filtered by message IDs if channel filter is applied
       const fileCounts = await ctx.db.file.groupBy({
         by: ['userId'],
         _count: {
           userId: true
         },
-        where: dateFilter
+        where: {
+          ...dateFilter,
+          userId: {
+            in: userIds
+          },
+          ...(input.channelId ? {
+            messageId: {
+              in: messageIds
+            }
+          } : {})
+        }
       });
 
       // Combine data for all users
       const combinedData = users.map(user => {
-        const messageCount = messageCounts.find(m => m.userId === user.id)?._count.userId ?? 0;
+        const messageCount = messageData.find(m => m.userId === user.id)?._count.userId ?? 0;
         const reactionCount = reactionCounts.find(r => r.userId === user.id)?._count.userId ?? 0;
         const fileCount = fileCounts.find(f => f.userId === user.id)?._count.userId ?? 0;
         const totalCount = messageCount + reactionCount + fileCount;
@@ -95,20 +147,12 @@ export const interactivityRouter = createTRPCRouter({
         };
       });
 
-      // Filter by userName if provided
-      let filteredData = combinedData;
-      if (input.userName) {
-        filteredData = combinedData.filter(item => 
-          item.userName?.toLowerCase().includes(input.userName!.toLowerCase())
-        );
-      }
-
       // Sort the data if requested
       if (input._sort && input._order) {
         const sortField = input._sort;
         const sortOrder = input._order.toLowerCase() as 'asc' | 'desc';
         
-        filteredData.sort((a, b) => {
+        combinedData.sort((a, b) => {
           const aValue = a[sortField as keyof typeof a];
           const bValue = b[sortField as keyof typeof b];
           return sortOrder === 'asc' 
@@ -117,16 +161,16 @@ export const interactivityRouter = createTRPCRouter({
         });
       } else {
         // Default sort by totalCount desc
-        filteredData.sort((a, b) => b.totalCount - a.totalCount);
+        combinedData.sort((a, b) => b.totalCount - a.totalCount);
       }
 
       // Apply pagination
-      const paginatedData = filteredData.slice(skip ?? 0, input._end);
+      const paginatedData = combinedData.slice(skip ?? 0, input._end);
 
       return {
         data: paginatedData,
-        total: filteredData.length,
-        hasNextPage: (skip ?? 0) + (take ?? 0) < filteredData.length
+        total: combinedData.length,
+        hasNextPage: (skip ?? 0) + (take ?? 0) < combinedData.length
       };
     }),
 
@@ -145,6 +189,10 @@ export const interactivityRouter = createTRPCRouter({
           messageCount: z.number(),
           reactionCount: z.number(),
           totalCount: z.number()
+        })),
+        channelStats: z.array(z.object({
+          channelName: z.string(),
+          messageCount: z.number()
         }))
       })
     }))
@@ -163,7 +211,7 @@ export const interactivityRouter = createTRPCRouter({
       startDate.setDate(endDate.getDate() - (days - 1)); // Subtract days-1 to include current day
       startDate.setHours(0, 0, 0, 0); // Start of day
 
-      // Get daily message counts
+      // Get daily message counts with channel info
       const messages = await ctx.db.message.findMany({
         where: {
           userId: input.id,
@@ -171,6 +219,9 @@ export const interactivityRouter = createTRPCRouter({
             gte: Math.floor(startDate.getTime() / 1000).toString(),
             lte: Math.floor(endDate.getTime() / 1000).toString()
           }
+        },
+        include: {
+          channel: true
         }
       });
 
@@ -212,11 +263,33 @@ export const interactivityRouter = createTRPCRouter({
         });
       }
 
+      // Build channel stats array by grouping messages by channelId
+      const channelStatsMap = new Map<number, { channelName: string; messageCount: number }>();
+      
+      messages.forEach(message => {
+        const channelId = message.channelId;
+        const channelName = message.channel.name;
+        
+        const existing = channelStatsMap.get(Number(channelId));
+        if (existing) {
+          existing.messageCount++;
+        } else {
+          channelStatsMap.set(Number(channelId), {
+            channelName: channelName ?? "Unknown",
+            messageCount: 1
+          });
+        }
+      });
+
+      const channelStats = Array.from(channelStatsMap.values())
+        .sort((a, b) => b.messageCount - a.messageCount);
+
       return {
         data: {
           userId: Number(user.id),
           userName: user.displayName || user.realName || null,
-          dailyStats
+          dailyStats,
+          channelStats
         }
       };
     }),

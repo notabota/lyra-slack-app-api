@@ -16,10 +16,8 @@ export const weeklyCountRouter = createTRPCRouter({
       }))
     }))
     .query(async ({ ctx, input }) => {
-      // Get current date and set to start of day in UTC
-      const now = new Date();
-      now.setUTCHours(0, 0, 0, 0);
-      const nowTs = Math.floor(now.getTime() / 1000);
+      // Get current timestamp in seconds
+      const nowTs = Math.floor(Date.now() / 1000);
       
       const secondsInDay = 86400;
       const days = 7;

@@ -2,6 +2,7 @@
 
 import { TrendingUp } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Legend, Dot } from "recharts"
+import { Spin } from "antd"
 
 import {
   Card,
@@ -29,8 +30,18 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function AreaInteractivity({ data }: { data: { dailyStats: Array<{ date: string, messageCount: number, reactionCount: number }> }}) {
+export function AreaInteractivity({ data, isLoading }: { data: { dailyStats: Array<{ date: string, messageCount: number, reactionCount: number }> }, isLoading?: boolean }) {
+  if (isLoading) {
     return (
+      <Card>
+        <div className="flex h-[450px] items-center justify-center">
+          <Spin size="large" />
+        </div>
+      </Card>
+    )
+  }
+
+  return (
     <Card>
       <CardHeader>
         <CardTitle>Activity Over Time</CardTitle>
@@ -49,7 +60,6 @@ export function AreaInteractivity({ data }: { data: { dailyStats: Array<{ date: 
               top: 20,
               bottom: 20
             }}
-            height={400}
           >
             <CartesianGrid vertical={false} />
             <XAxis
