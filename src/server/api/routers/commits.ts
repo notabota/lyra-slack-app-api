@@ -9,9 +9,9 @@ export const commitsRouter = createTRPCRouter({
       z.object({
         _start: z.number().optional(),
         _end: z.number().optional(),
-        _sort: z.enum(["committer", "count"]).optional(),
+        _sort: z.enum(["author", "count"]).optional(),
         _order: z.enum(["asc", "desc"]).optional(),
-        _filter: z.enum(["committer", "count"]).optional(),
+        _filter: z.enum(["author", "count"]).optional(),
         _value: z.string().optional() || z.array(z.number()).optional(),
         _operator: z.enum(["contains", "between"]).optional(),
         timespan: z.enum(["1d", "7d", "14d", "30d", "all"]).optional(),
@@ -21,7 +21,7 @@ export const commitsRouter = createTRPCRouter({
       z.object({
         data: z.array(
           z.object({
-            committer: z.string(),
+            author: z.string(),
             count: z.number(),
             timespan: z.enum(["1d", "7d", "14d", "30d", "all"]),
           }),
@@ -31,9 +31,7 @@ export const commitsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      console.log("FILTERS", input._filter);
-      console.log("FILTERS", input._value);
-      console.log("FILTERS", input._operator);
+      
       const skip = input._start;
       const take = input._end ? input._end - (input._start ?? 0) : undefined;
 
@@ -56,15 +54,15 @@ export const commitsRouter = createTRPCRouter({
 
       const [summary, total] = await Promise.all([
         ctx.dbGithub.commit.groupBy({
-          by: ['committer'],
+          by: ['author'],
           skip,
           take,
           where: {
             AND: [
               timeFilter,
-              input._filter === 'committer' && input._value
+              input._filter === 'author' && input._value
                 ? {
-                    committer: {
+                    author: {
                       contains: input._value,
                       mode: "insensitive" as const,
                     },
@@ -73,18 +71,18 @@ export const commitsRouter = createTRPCRouter({
             ],
           },
           _count: {
-            committer: true
+            author: true
           },
           having: input._filter === 'count' && input._value ? {
-            committer: {
+            author: {
               _count: {
                 gte: input._value[0] ? Number(input._value[0]) : undefined,
                 lte: input._value[1] ? Number(input._value[1]) : undefined,
               }
             }
           } : undefined,
-          orderBy: input._sort === 'committer' 
-            ? { committer: input._order?.toLowerCase() as "asc" | "desc" ?? "asc" }
+          orderBy: input._sort === 'author' 
+            ? { author: input._order?.toLowerCase() as "asc" | "desc" ?? "asc" }
             : {
                 _count: {
                   committer: input._order?.toLowerCase() as "asc" | "desc" ?? "desc"
@@ -95,11 +93,11 @@ export const commitsRouter = createTRPCRouter({
           where: timeFilter,
         }),
       ]);
-      console.log(summary);
+      
       return {
         data: summary.map((group) => ({
-          committer: group.committer ?? "Unknown",
-          count: group._count.committer ?? 0,
+          author: group.author ?? "Unknown",
+          count: group._count.author ?? 0,
           timespan: input.timespan ?? "all",
         })),
         total: total,

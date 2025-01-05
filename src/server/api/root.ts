@@ -10,6 +10,7 @@ import { commitsRouter } from "./routers/commits";
 import { slackRouter } from "./routers/slack";
 import { repositoriesRouter } from "./routers/repositories";
 import { leaderboardRouter } from "./routers/leaderboard";
+import { githubRouter } from "./routers/github";
 /**
  * This is the primary router for your server.
  *
@@ -26,7 +27,8 @@ export const appRouter = createTRPCRouter({
   commits: commitsRouter,
   slack: slackRouter,
   repositories: repositoriesRouter,
-  leaderboard: leaderboardRouter
+  leaderboard: leaderboardRouter,
+  github: githubRouter
 });
 
 

@@ -11,8 +11,7 @@ datasource db {
 model User {
   id      String   @id @default(cuid())
   GitHubUsername    String @unique
-  accessToken String?
-  refreshToken String?
+  slackUserId BigInt? 
   repos   Repo[]
 }
 

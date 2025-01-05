@@ -72,21 +72,20 @@ export default function RefineLayout({ children }: { children: React.ReactNode }
                 meta: { label: "Repositories" },
                 parentName: "github",
               },
-              {
-                icon: <ArrowBigUpDash width={20} height={20} className="ml-[-4px]" />,
-                name: "github-leaderboard",
-                list: "/refine/github/leaderboard",
-                meta: { label: "Leaderboard" },
-                parentName: "github",
-              },
-              {
-                icon: <ChartNoAxesCombined width={20} height={20} className="ml-[-4px]" />,
-                name: "github-stats",
-                list: "/refine/github/stats",
-                meta: { label: "Your Stats" },
-                parentName: "github",
-              },
-              
+              // {
+              //   icon: <ArrowBigUpDash width={20} height={20} className="ml-[-4px]" />,
+              //   name: "github-leaderboard",
+              //   list: "/refine/github/leaderboard",
+              //   meta: { label: "Leaderboard" },
+              //   parentName: "github",
+              // },
+              // {
+              //   icon: <ChartNoAxesCombined width={20} height={20} className="ml-[-4px]" />,
+              //   name: "github-stats",
+              //   list: "/refine/github/stats",
+              //   meta: { label: "Your Stats" },
+              //   parentName: "github",
+              // },
             ]}
             options={{ syncWithLocation: true }}
           >

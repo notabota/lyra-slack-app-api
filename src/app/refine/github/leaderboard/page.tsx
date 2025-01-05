@@ -13,14 +13,14 @@ import { useInfiniteList } from "@refinedev/core";
 import { ShowButton, ThemedLayoutV2 } from "@refinedev/antd";
 
 type LeaderboardData = {
-  commiter: number;
+  author: string;
   numberOfCommits: number;
 };
 
 const columns: MRT_ColumnDef<LeaderboardData>[] = [
   {
-    accessorKey: "committer",
-    header: "Committer",
+    accessorKey: "author",
+    header: "Author",
     filterVariant: "text",
   },
   {
@@ -38,7 +38,7 @@ const columns: MRT_ColumnDef<LeaderboardData>[] = [
         <ShowButton
           hideText
           size="small"
-          recordItemId={row.original.commiter}
+          recordItemId={row.original.author}
         />
       </Stack>
     ),

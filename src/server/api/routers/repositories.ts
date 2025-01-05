@@ -88,7 +88,7 @@ export const repositoriesRouter = createTRPCRouter({
               where: {
                 author: {
                   not: null,
-                  notIn: ["web-flow"],
+                //   notIn: ["web-flow"],
                 },
               },
             },
@@ -113,7 +113,7 @@ export const repositoriesRouter = createTRPCRouter({
           }
         }),
       ]);
-
+      console.log(repositories.at(0)?.commits)
       // Post-process the data to apply numeric filters that can't be done in the query
       let data = repositories.map((repository) => {
         const contributorStats = repository.commits.reduce(
