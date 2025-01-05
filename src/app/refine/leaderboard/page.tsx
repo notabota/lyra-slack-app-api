@@ -71,7 +71,8 @@ export default function ListInteractivity() {
   const [form] = Form.useForm();
   const [formMsg, setFormMsg] = useState<FormMsg>({
     type: "waiting",
-    message: "Authentication will be added later, this is temporary. You have to have a contribution to a repository that is being tracked to show up on the leaderboard.",
+    message:
+      "Authentication will be added later, this is temporary. You have to have a contribution to a repository that is being tracked to show up on the leaderboard.",
   });
 
   const addUserMutation = api.github.addUser.useMutation();
@@ -119,12 +120,14 @@ export default function ListInteractivity() {
     return icons[index] || null;
   };
 
-  const slackUsersNamesAndIds = slackUsers.map((user) => {
-    return {
-      slackUserId: user.userId,
-      userName: user.userName,
-    };
-  }).sort((a, b) => (a.userName || "").localeCompare(b.userName || ""));
+  const slackUsersNamesAndIds = slackUsers
+    .map((user) => {
+      return {
+        slackUserId: user.userId,
+        userName: user.userName,
+      };
+    })
+    .sort((a, b) => (a.userName || "").localeCompare(b.userName || ""));
 
   const isGitHubUser = (
     user: InteractivityData | GitHubData,
@@ -306,62 +309,74 @@ export default function ListInteractivity() {
               setFormMsg({
                 type: "loading",
                 message: "Adding user...",
-              });
-              addUserMutation.mutate(
-                {
-                  slackUserId: values.slackUserId,
-                  GitHubUsername: values.githubUsername,
+            });
+            addUserMutation.mutate(
+              {
+                slackUserId: values.slackUserId,
+                GitHubUsername: values.githubUsername,
+              },
+              {
+                onSuccess: (result) => {
+                  setFormMsg({
+                    type: "success",
+                    message: "User added successfully!",
+                  });
                 },
-                {
-                  onSuccess: (result) => {
-                    setFormMsg({
-                      type: "success",
-                      message: "User added successfully!",
-                    });
-                  },
-                  onError: (error) => {
-                    setFormMsg({
-                      type: "error",
-                      message: error.message,
-                    });
-                  },
+                onError: (error) => {
+                  setFormMsg({
+                    type: "error",
+                    message: error.message,
+                  });
                 },
-                
-              );
-              
-            } else {
-              setFormMsg({
-                type: "error",
-                message: "Please fill in all fields",
+              },
+            );
+          } else {
+            setFormMsg({
+              type: "error",
+              message: "Please fill in all fields",
               });
             }
+          }).catch((error) => {
+            setFormMsg({
+              type: "error",
+              message: "Please fill in all fields",
+            });
           });
         }}
         okText="Submit"
       >
         <Form form={form} className="my-8 px-6">
-          <Form.Item required className="min-w-[200px]" name="slackUserId">
+          <Form.Item key="slackUserId" required className="min-w-[200px]" name="slackUserId">
             <AntSelect placeholder="Slack Username">
               {slackUsersNamesAndIds.map(
                 (user) =>
                   user && (
-                    <AntSelect.Option value={user.slackUserId}>
+                    <AntSelect.Option key={user.slackUserId} value={user.slackUserId}>
                       {user.userName}
                     </AntSelect.Option>
                   ),
               )}
             </AntSelect>
           </Form.Item>
-          <Form.Item required name="githubUsername">
+          <Form.Item key="githubUsername" required name="githubUsername">
             <Input placeholder="GitHub Username" />
           </Form.Item>
-          
-          <label className={`flex items-center gap-2 text-sm 
-            ${formMsg.type === "error" ? "text-red-500" : formMsg.type === "success" ? "text-green-500" : formMsg.type === "waiting" ? "text-blue-500" : "text-gray-500"}`}>
-            {formMsg.type === "error" && <ShieldAlert className="flex-shrink-0" size={24} />}
-            {formMsg.type === "success" && <CheckCircle className="flex-shrink-0" size={24} />}
-            {formMsg.type === "waiting" && <Info className="flex-shrink-0" size={24} />}
-            {formMsg.type === "loading" && <Loader className="flex-shrink-0 animate-spin" size={24} />}
+
+          <label
+            className={`flex items-center gap-2 text-sm ${formMsg.type === "error" ? "text-red-500" : formMsg.type === "success" ? "text-green-500" : formMsg.type === "waiting" ? "text-blue-500" : "text-gray-500"}`}
+          >
+            {formMsg.type === "error" && (
+              <ShieldAlert className="flex-shrink-0" size={24} />
+            )}
+            {formMsg.type === "success" && (
+              <CheckCircle className="flex-shrink-0" size={24} />
+            )}
+            {formMsg.type === "waiting" && (
+              <Info className="flex-shrink-0" size={24} />
+            )}
+            {formMsg.type === "loading" && (
+              <Loader className="flex-shrink-0 animate-spin" size={24} />
+            )}
             {formMsg.type === "error" && <span>{formMsg.message}</span>}
             {formMsg.type === "success" && <span>{formMsg.message}</span>}
             {formMsg.type === "waiting" && <span>{formMsg.message}</span>}
