@@ -86,15 +86,19 @@ export const leaderboardRouter = createTRPCRouter({
               ELSE 0
             END
           ) as weighted_score
-        FROM "Commit" JOIN "User" ON "Commit"."author" = "User"."GitHubUsername"
-        WHERE "timestamp" >= ${cutoffDate} AND "User"."slackUserId" IS NOT NULL
+        FROM (
+          SELECT DISTINCT ON ("commitHash") *
+          FROM "Commit"
+          WHERE "timestamp" >= ${cutoffDate}
+        ) as "DistinctCommit" 
+        JOIN "User" ON "DistinctCommit"."author" = "User"."GitHubUsername"
+        WHERE "User"."slackUserId" IS NOT NULL
         GROUP BY "User"."slackUserId"
         ORDER BY weighted_score DESC
       `;
       const data = summary.map((stat) => ({
         userId: Number(stat.slackUserId),
         userName: users.find((user) => user.id === stat.slackUserId)?.displayName || users.find((user) => user.id === stat.slackUserId)?.realName || null,
-
         commits: Number(stat.commit_count),
         commitPoints: Number(stat.weighted_score),
         image: users.find((user) => user.id === stat.slackUserId)?.image || null,

@@ -76,7 +76,10 @@ export default function ListInteractivity() {
   });
 
   const addUserMutation = api.github.addUser.useMutation();
-
+  api.github.getUserCommits.useQuery({
+    slackUserId: 1,
+  });
+  
   const { data: slackLeaderboardData, isFetching } = useCustom({
     url: `/api/leaderboard/slack?timespan=${timespan}`,
     method: "get",
